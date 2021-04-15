@@ -22,6 +22,9 @@
  <Departamento Id="2" Nombre="Laboratorio"/>
  <Departamento Id="3" Nombre="Bodega de materiales"/>
  <Departamento Id="4" Nombre="Bodega de producto terminado"/>
+ <Departamento Id="5" Nombre="Bodega de materia prima"/>
+ <Departamento Id="6" Nombre="Camiones"/>
+ <Departamento Id="7" Nombre="Contabilidad"/>
 </Departamentos>
 
 </Catalogos>

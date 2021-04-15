@@ -2,7 +2,7 @@
 
 <Empleados>
  <Empleado
- Nombre="Juanito Valderrama"
+ Nombre="Juan Valderrama"
  IdTipoIdentificacion="3"
  ValorDocumentoIdentifacion="123344555"
  IdDepartamento="7"
@@ -10,11 +10,11 @@
  FechaNacimiento="1998-05-10"
  />
  <Empleado
- Nombre="Juanito Valderrama"
- IdTipoIdentificacion="3"
- ValorDocumentoIdentifacion="123344555"
+ Nombre="Keylor Calderón"
+ IdTipoIdentificacion="2"
+ ValorDocumentoIdentifacion="2018143224"
  IdDepartamento="7"
  Puesto="Electricista"
- FechaNacimiento="1998-05-10"
+ FechaNacimiento="2000-04-25"
  />
 </Empleados>
