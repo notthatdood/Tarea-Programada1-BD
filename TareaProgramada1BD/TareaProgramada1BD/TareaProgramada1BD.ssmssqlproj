@@ -19,6 +19,18 @@
     </LogicalFolder>
     <LogicalFolder Name="Queries" Type="0" Sorted="true">
       <Items>
+        <FileNode Name="BorrarEmpleados.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>BorrarEmpleados.sql</FullPath>
+        </FileNode>
+        <FileNode Name="BorrarPuestos.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>BorrarPuestos.sql</FullPath>
+        </FileNode>
         <FileNode Name="Cargar_XML.sql">
           <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
           <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
@@ -55,6 +67,12 @@
           <AssociatedConnUserName />
           <FullPath>InsertarPuestos.sql</FullPath>
         </FileNode>
+        <FileNode Name="ListarDepartamentos.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>ListarDepartamentos.sql</FullPath>
+        </FileNode>
         <FileNode Name="ListarEmpleados.sql">
           <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
           <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
@@ -67,10 +85,22 @@
           <AssociatedConnUserName />
           <FullPath>ListarPuestos.sql</FullPath>
         </FileNode>
+        <FileNode Name="ListarTarjetas.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>ListarTarjetas.sql</FullPath>
+        </FileNode>
       </Items>
     </LogicalFolder>
     <LogicalFolder Name="Miscellaneous" Type="3" Sorted="true">
       <Items>
+        <FileNode Name="CatalogoFinal.xml">
+          <AssociatedConnectionMoniker />
+          <AssociatedConnSrvName />
+          <AssociatedConnUserName />
+          <FullPath>CatalogoFinal.xml</FullPath>
+        </FileNode>
         <FileNode Name="Catalogos.xml">
           <AssociatedConnectionMoniker />
           <AssociatedConnSrvName />

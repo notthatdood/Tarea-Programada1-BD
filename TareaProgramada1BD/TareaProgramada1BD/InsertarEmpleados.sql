@@ -6,11 +6,27 @@ Create procedure InsertarEmpleados
 	@Puesto varchar(40),
 	@FechaNacimiento date
 	
-
 	as
+	Begin
+		set nocount on;
+		Begin try
+			Insert into Empleado
+			Values(@Nombre, @IdTipoIdentificacion, @ValorDocumentoIdentificacion,
+			@IdDepartamento, @Puesto, @FechaNacimiento, '1')
+		End try
+		Begin catch
+			Insert into DBErrores values (
+			SUSER_SNAME(),
+			ERROR_NUMBER(),
+			ERROR_STATE(),
+			ERROR_SEVERITY(),
+			ERROR_LINE(),
+			ERROR_PROCEDURE(),
+			ERROR_MESSAGE(),
+			GETDATE()
+			)
+		End catch
 
-	Insert into Empleado
-	Values(@Nombre, @IdTipoIdentificacion, @ValorDocumentoIdentificacion,
-	@IdDepartamento, @Puesto, @FechaNacimiento, '1')
-
+		set nocount off;
+	End
 GO

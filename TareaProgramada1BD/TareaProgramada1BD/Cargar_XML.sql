@@ -12,10 +12,10 @@ A.CatalogoXML.value('@SalarioXHora','int') as SalarioXHora,
 From
 (
 Select cast(CatalogoXML as xml) from
-Openrowset(Bulk 'C:\Catalogos.xml', Single_Blob) T(CatalogoXML)
+Openrowset(Bulk 'C:\CatalogoFinal.xml', Single_Blob) T(CatalogoXML)
 ) as S(CatalogoXML)
 
-Cross apply CatalogoXML.nodes('Catalogos/Puestos/Puesto') as A(CatalogoXML)
+Cross apply CatalogoXML.nodes('Datos/Catalogos/Puestos/Puesto') as A(CatalogoXML)
 
 Insert into TipoDocuIdentidad
 
@@ -26,10 +26,10 @@ A.CatalogoXML.value('@Nombre','varchar(40)') as Nombre
 From
 (
 Select cast(CatalogoXML as xml) from
-Openrowset(Bulk 'C:\Catalogos.xml', Single_Blob) T(CatalogoXML)
+Openrowset(Bulk 'C:\CatalogoFinal.xml', Single_Blob) T(CatalogoXML)
 ) as S(CatalogoXML)
 
-Cross apply CatalogoXML.nodes('Catalogos/Tipos_de_Documento_de_Identidad/TipoDocuIdentidad') as A(CatalogoXML)
+Cross apply CatalogoXML.nodes('Datos/Catalogos/Tipos_de_Documento_de_Identificacion/TipoIdDoc') as A(CatalogoXML)
 
 Insert into Departamento
 
@@ -40,10 +40,10 @@ A.CatalogoXML.value('@Nombre','varchar(40)') as Nombre
 From
 (
 Select cast(CatalogoXML as xml) from
-Openrowset(Bulk 'C:\Catalogos.xml', Single_Blob) T(CatalogoXML)
+Openrowset(Bulk 'C:\CatalogoFinal.xml', Single_Blob) T(CatalogoXML)
 ) as S(CatalogoXML)
 
-Cross apply CatalogoXML.nodes('Catalogos/Departamentos/Departamento') as A(CatalogoXML)
+Cross apply CatalogoXML.nodes('Datos/Catalogos/Departamentos/Departamento') as A(CatalogoXML)
 GO
 
 Create procedure insertarEmpleado as
@@ -53,21 +53,42 @@ Insert into Empleado
 Select 
 
 A.EmpleadoXML.value('@Nombre','varchar(30)') as Nombre,
-A.EmpleadoXML.value('@IdTipoIdentificacion','int') as IdTipoIdentificacion,
-A.EmpleadoXML.value('@ValorDocumentoIdentifacion','int') as ValorDocumentoIdentifacion,
+A.EmpleadoXML.value('@idTipoDocumentacionIdentidad','int') as IdTipoIdentificacion,
+A.EmpleadoXML.value('@ValorDocumentoIdentidad','int') as ValorDocumentoIdentifacion,
 A.EmpleadoXML.value('@IdDepartamento','int') as IdDepartamento,
-A.EmpleadoXML.value('@Puesto','varchar(40)') as Puesto,
+A.EmpleadoXML.value('@idPuesto','int') as Puesto,
 A.EmpleadoXML.value('@FechaNacimiento','date') as FechaNacimiento,
 '1' as Activo
 From
 (
 Select cast(EmpleadosXML as xml) from
-Openrowset(Bulk 'C:\NoCatalogos.xml', Single_Blob) T(EmpleadosXML)
+Openrowset(Bulk 'C:\CatalogoFinal.xml', Single_Blob) T(EmpleadosXML)
 ) as S(EmpleadosXML)
 
-Cross apply EmpleadosXML.nodes('Empleados/Empleado') as A(EmpleadoXML)
+Cross apply EmpleadosXML.nodes('Datos/Empleados/Empleado') as A(EmpleadoXML)
+
+GO
+
+Create procedure insertarUsuario as
+
+Insert into Usuario
+
+Select 
+
+A.UsuarioXML.value('@username','varchar(30)') as Username,
+A.UsuarioXML.value('@pwd','varchar(30)') as Pwd,
+A.UsuarioXML.value('@tipo','int') as Tipo
+
+From
+(
+Select cast(UsuariosXML as xml) from
+Openrowset(Bulk 'C:\CatalogoFinal.xml', Single_Blob) T(UsuariosXML)
+) as S(UsuariosXML)
+
+Cross apply UsuariosXML.nodes('Datos/Usuarios/Usuario') as A(UsuarioXML)
 
 GO
 
 Execute insertarCatalogos
 Execute insertarEmpleado
+Execute insertarUsuario

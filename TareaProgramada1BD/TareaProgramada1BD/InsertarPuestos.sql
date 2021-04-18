@@ -4,8 +4,25 @@ Create procedure InsertarPuestos
 	@SalarioXHora int
 
 	as
+	Begin
+		set nocount on;
+		Begin try
+			Insert into Puesto
+			Values(@Id, @Nombre, @SalarioXHora,'1')
+		End try
+		Begin catch
+			Insert into DBErrores values (
+			SUSER_SNAME(),
+			ERROR_NUMBER(),
+			ERROR_STATE(),
+			ERROR_SEVERITY(),
+			ERROR_LINE(),
+			ERROR_PROCEDURE(),
+			ERROR_MESSAGE(),
+			GETDATE()
+			)
+		End catch
 
-	Insert into Puesto
-	Values(@Id, @Nombre, @SalarioXHora,'1')
-
+		set nocount off;
+	End
 GO
