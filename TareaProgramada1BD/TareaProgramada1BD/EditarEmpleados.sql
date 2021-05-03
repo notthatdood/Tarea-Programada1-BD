@@ -17,18 +17,18 @@ CREATE PROCEDURE EditarEmpleados
 			IF NOT EXISTS(SELECT 1 FROM Empleado C WHERE C.Id=@InEmpleadoId)
 			OR EXISTS(SELECT 1 FROM Empleado C WHERE C.Id=@InEmpleadoId AND Activo='0')
 				BEGIN
-					Set @OutResultCode=50001; --El empleado no existe
+					SET @OutResultCode=50001; --El empleado no existe
 					RETURN
 				END;
 			UPDATE Empleado
 			SET Nombre=@InEmpleadoNombre, IdTipoIdentificacion=@InEmpleadoIdTipoIdentificacion,
 			ValorDocumentoIdentificacion=@InEmpleadoValorDocumentoIdentificacion,
-			FechaNacimiento=@InEmpleadoIdDepartamento,
+			FechaNacimiento=@InEmpleadoFechaNacimiento,
 			IdPuesto=@InEmpleadoIdPuesto, IdDepartamento=@InEmpleadoIdDepartamento
 			WHERE Id=@InEmpleadoId and Activo='1'
 		END TRY
 		BEGIN CATCH
-			INSERT INTO DBErrores values (
+			INSERT INTO DBErrores VALUES (
 			SUSER_SNAME(),
 			ERROR_NUMBER(),
 			ERROR_STATE(),
@@ -46,5 +46,5 @@ CREATE PROCEDURE EditarEmpleados
 
 --DECLARE @ResultCode INT
 --EXECUTE EditarEmpleados 'Id', 'Nombre', 'TipoIdentificacion',
---'ValorDocIdentificacion', 'FechaNacimiento', 'IdPuesto', 'IdDepartamento', @ResultCode
+--'ValorDocIdentificacion', 'FechaNacimiento', 'IdPuesto', 'IdDepartamento', @ResultCode OUTPUT
 --SELECT @ResultCode

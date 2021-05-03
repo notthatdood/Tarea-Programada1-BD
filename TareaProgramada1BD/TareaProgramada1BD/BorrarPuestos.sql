@@ -36,5 +36,5 @@ CREATE PROCEDURE BorrarPuestos
 	END
 
 --DECLARE @ResultCode INT
---EXECUTE BorrarPuestos 'Id', @ResultCode
+--EXECUTE BorrarPuestos 'Id', @ResultCode OUTPUT
 --SELECT @ResultCode

@@ -1,17 +1,19 @@
-Create procedure InsertarPuestos
-	@Id int,
-	@Nombre varchar(40),
-	@SalarioXHora int
+CREATE PROCEDURE InsertarPuestos
+	@InPuestoId INT,
+	@InPuestoNombre varchar(40),
+	@InPuestoSalarioXHora INT,
+	@OutResultCode INT OUTPUT
 
-	as
-	Begin
-		set nocount on;
-		Begin try
-			Insert into Puesto
-			Values(@Id, @Nombre, @SalarioXHora,'1')
-		End try
-		Begin catch
-			Insert into DBErrores values (
+	AS
+	BEGIN
+		SET NOCOUNT ON;
+		BEGIN TRY
+			SET @OutResultCode=0;
+			INSERT INTO Puesto
+			VALUES(@InPuestoId, @InPuestoNombre, @InPuestoSalarioXHora,'1')
+		END TRY
+		BEGIN CATCH
+			INSERT INTO DBErrores VALUES (
 			SUSER_SNAME(),
 			ERROR_NUMBER(),
 			ERROR_STATE(),
@@ -21,8 +23,12 @@ Create procedure InsertarPuestos
 			ERROR_MESSAGE(),
 			GETDATE()
 			)
-		End catch
+		
+			SET @OutResultCode=50005;
+		END CATCH
+		SET NOCOUNT OFF;
+	END
 
-		set nocount off;
-	End
-GO
+--DECLARE @ResultCode INT
+--EXECUTE InsertarPuestos 'Id', 'Nombre', 'SalarioXHora', @ResultCode OUTPUT
+--SELECT @ResultCode

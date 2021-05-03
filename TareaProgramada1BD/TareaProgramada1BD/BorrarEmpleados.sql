@@ -11,7 +11,7 @@ CREATE PROCEDURE BorrarEmpleados
 			IF NOT EXISTS(SELECT 1 FROM Empleado C WHERE C.Id=@InEmpleadoId)
 			OR EXISTS(SELECT 1 FROM Empleado C WHERE C.Id=@InEmpleadoId AND Activo='0')
 				BEGIN
-					Set @OutResultCode=50001; --El empleado no existe
+					SET @OutResultCode=50001; --El empleado no existe
 					RETURN
 				END;
 			UPDATE Empleado
@@ -36,5 +36,5 @@ CREATE PROCEDURE BorrarEmpleados
 	END
 
 --DECLARE @ResultCode INT
---EXECUTE BorrarEmpleados 'Id', @ResultCode
+--EXECUTE BorrarEmpleados 'Id', @ResultCode OUTPUT
 --SELECT @ResultCode

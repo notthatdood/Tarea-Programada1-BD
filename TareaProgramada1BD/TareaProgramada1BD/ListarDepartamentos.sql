@@ -1,5 +1,24 @@
-Create procedure ListarDepartamento as
+CREATE PROCEDURE ListarDepartamento
 
-	Select * from Departamento order by Id
+	AS
+	BEGIN
+		SET NOCOUNT ON;
+		BEGIN TRY
+			SELECT * FROM Departamento ORDER BY Id
+		END TRY
+		BEGIN CATCH
+			INSERT INTO DBErrores VALUES (
+			SUSER_SNAME(),
+			ERROR_NUMBER(),
+			ERROR_STATE(),
+			ERROR_SEVERITY(),
+			ERROR_LINE(),
+			ERROR_PROCEDURE(),
+			ERROR_MESSAGE(),
+			GETDATE()
+			)
+		END CATCH
+		SET NOCOUNT OFF;
+	END
 
-GO
+--EXECUTE ListarDepartamento

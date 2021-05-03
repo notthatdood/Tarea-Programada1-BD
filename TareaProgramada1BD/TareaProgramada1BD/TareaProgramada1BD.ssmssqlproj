@@ -32,8 +32,8 @@
           <FullPath>BorrarPuestos.sql</FullPath>
         </FileNode>
         <FileNode Name="Cargar_XML.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>Cargar_XML.sql</FullPath>
         </FileNode>
@@ -44,50 +44,50 @@
           <FullPath>CrearDB.sql</FullPath>
         </FileNode>
         <FileNode Name="EditarEmpleados.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>EditarEmpleados.sql</FullPath>
         </FileNode>
         <FileNode Name="EditarPuestos.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>EditarPuestos.sql</FullPath>
         </FileNode>
         <FileNode Name="InsertarEmpleados.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>InsertarEmpleados.sql</FullPath>
         </FileNode>
         <FileNode Name="InsertarPuestos.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>InsertarPuestos.sql</FullPath>
         </FileNode>
         <FileNode Name="ListarDepartamentos.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>ListarDepartamentos.sql</FullPath>
         </FileNode>
         <FileNode Name="ListarEmpleados.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>ListarEmpleados.sql</FullPath>
         </FileNode>
         <FileNode Name="ListarPuestos.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>ListarPuestos.sql</FullPath>
         </FileNode>
         <FileNode Name="ListarTarjetas.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>ListarTarjetas.sql</FullPath>
         </FileNode>
