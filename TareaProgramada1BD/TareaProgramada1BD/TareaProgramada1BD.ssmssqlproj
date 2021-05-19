@@ -31,6 +31,12 @@
           <AssociatedConnUserName />
           <FullPath>BorrarPuestos.sql</FullPath>
         </FileNode>
+        <FileNode Name="BorrarTodo.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>BorrarTodo.sql</FullPath>
+        </FileNode>
         <FileNode Name="Cargar_XML.sql">
           <AssociatedConnectionMoniker />
           <AssociatedConnSrvName />
@@ -38,8 +44,8 @@
           <FullPath>Cargar_XML.sql</FullPath>
         </FileNode>
         <FileNode Name="CrearDB.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>CrearDB.sql</FullPath>
         </FileNode>
@@ -91,6 +97,12 @@
           <AssociatedConnUserName />
           <FullPath>ListarTarjetas.sql</FullPath>
         </FileNode>
+        <FileNode Name="Trigger.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>Trigger.sql</FullPath>
+        </FileNode>
       </Items>
     </LogicalFolder>
     <LogicalFolder Name="Miscellaneous" Type="3" Sorted="true">
@@ -106,6 +118,12 @@
           <AssociatedConnSrvName />
           <AssociatedConnUserName />
           <FullPath>Catalogos.xml</FullPath>
+        </FileNode>
+        <FileNode Name="Datos_Tarea2.xml">
+          <AssociatedConnectionMoniker />
+          <AssociatedConnSrvName />
+          <AssociatedConnUserName />
+          <FullPath>Datos_Tarea2.xml</FullPath>
         </FileNode>
         <FileNode Name="NoCatalogos.xml">
           <AssociatedConnectionMoniker />

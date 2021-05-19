@@ -87,7 +87,7 @@ Create table PlanillaSemanal ( Id int IDENTITY(1,1) PRIMARY KEY,
 						FOREIGN KEY (IdMes) REFERENCES PlanillaMensual (Id))
 GO
 
-Create table PlanillaSemanalXEmpleado ( IdSemana int,
+Create table PlanillaSemanalXEmpleado ( IdSemana int primary key,
 						IdEmpleado int,
 						SalarioNeto int,
 						TipoJornada int,
@@ -96,7 +96,7 @@ Create table PlanillaSemanalXEmpleado ( IdSemana int,
 						FOREIGN KEY (TipoJornada) REFERENCES TiposDeJornada (Id))
 GO
 
-Create table PlanillaMensualXEmpleado ( IdMes int,
+Create table PlanillaMensualXEmpleado ( IdMes int primary key,
 						IdEmpleado int,
 						SalarioNeto int,
 						SalarioTotal int,
@@ -108,7 +108,9 @@ Create table MovimientoPlanilla ( Id int IDENTITY(1,1) PRIMARY KEY,
 						Fecha date,
 						Monto int,
 						IdSemana int,
-						FOREIGN KEY (IdSemana) REFERENCES PlanillaSemanal (Id))
+						TipoMovimiento int,
+						FOREIGN KEY (IdSemana) REFERENCES PlanillaSemanalXEmpleado (IdSemana),
+						FOREIGN KEY (TipoMovimiento) REFERENCES TipoMovimiento (Id))
 GO
 
 Create table MovimientoHoras ( Id int primary key,
@@ -119,24 +121,20 @@ Create table MovimientoDeduccion ( Id int primary key,
 						FOREIGN KEY (Id) REFERENCES MovimientoPlanilla (Id))
 GO
 
-Create table MarcaAsistencia ( IdMovimiento int primary key,
-						IdEmpleado int,
+Create table MarcaAsistencia ( IdEmpleado int,
 						ValorDocIdentidad int,
 						FechaEntrada datetime,
 						FechaSalida datetime,
-						FOREIGN KEY (IdEmpleado) REFERENCES Empleado (Id),
-						FOREIGN KEY (IdMovimiento) REFERENCES MovimientoHoras (Id))
+						FOREIGN KEY (IdEmpleado) REFERENCES Empleado (Id))
 GO
 
-Create table DeduccionXEmpleado ( IdMovimiento int primary key,
-						IdEmpleado int,
+Create table DeduccionXEmpleado ( IdEmpleado int,
 						ValorDocIdentidad int,
 						Nombre varchar(50),
 					    Obligatorio bit,
 						Porcentual bit,
 						Valor decimal(2,2)
-						FOREIGN KEY (IdEmpleado) REFERENCES Empleado (Id),
-						FOREIGN KEY (IdMovimiento) REFERENCES MovimientoDeduccion (Id))
+						FOREIGN KEY (IdEmpleado) REFERENCES Empleado (Id))
 GO
 
 Create table DeduccionXEmpleadoXMes ( Id int primary key,
