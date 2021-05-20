@@ -52,7 +52,7 @@ Create table TipoDeduccion ( Id int PRIMARY KEY,
 					    Nombre varchar(50),
 					    Obligatorio bit,
 						Porcentual bit,
-						Valor decimal(2,2))
+						Valor decimal(3,3))
 GO
 
 Create table TipoMovimiento ( Id int PRIMARY KEY,
