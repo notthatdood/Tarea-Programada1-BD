@@ -1,3 +1,6 @@
+USE TareaProgramada;
+GO
+
 CREATE PROCEDURE InsertarEmpleados
 	@InEmpleadoNombre VARCHAR(50),
 	@InEmpleadoIdTipoIdentificacion INT,
@@ -5,6 +8,8 @@ CREATE PROCEDURE InsertarEmpleados
 	@InEmpleadoFechaNacimiento DATE,
 	@InEmpleadoIdPuesto INT,
 	@InEmpleadoIdDepartamento INT,
+	@InEmpleadoUsername VARCHAR(30),
+	@InEmpleadoPwd VARCHAR(30),
 	@OutResultCode INT OUTPUT
 	
 	AS
@@ -14,7 +19,8 @@ CREATE PROCEDURE InsertarEmpleados
 			SET @OutResultCode=0;
 			INSERT INTO Empleado
 			VALUES(@InEmpleadoNombre, @InEmpleadoIdTipoIdentificacion, @InEmpleadoValorDocumentoIdentificacion,
-			@InEmpleadoIdDepartamento, @InEmpleadoIdPuesto, @InEmpleadoFechaNacimiento, '1')
+			@InEmpleadoIdDepartamento, @InEmpleadoIdPuesto, @InEmpleadoFechaNacimiento, @InEmpleadoUsername,
+			@InEmpleadoPwd,'1')
 		END TRY
 		BEGIN CATCH
 			INSERT INTO DBErrores VALUES (

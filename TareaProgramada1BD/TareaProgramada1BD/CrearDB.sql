@@ -133,7 +133,7 @@ Create table DeduccionXEmpleado ( IdEmpleado int,
 						Nombre varchar(50),
 					    Obligatorio bit,
 						Porcentual bit,
-						Valor decimal(2,2)
+						Valor decimal(3,3)
 						FOREIGN KEY (IdEmpleado) REFERENCES Empleado (Id))
 GO
 

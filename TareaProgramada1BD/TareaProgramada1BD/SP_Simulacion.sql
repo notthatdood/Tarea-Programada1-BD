@@ -1,0 +1,86 @@
+--SELECT EOMONTH( @mydate, -1 )
+--SELECT EOMONTH( '2021-02-04')
+--SELECT EOMONTH( @mydate, 1 )
+
+CREATE PROCEDURE InsertarMes
+	@InFechaInicio DATE,
+	@OutResultCode INT OUTPUT
+
+	AS
+	BEGIN
+		SET NOCOUNT ON;
+		BEGIN TRY
+			SELECT
+				@OutResultCode=0;
+			DECLARE
+				@InFechaFinal DATE,
+				@InFechaTemporal DATE,
+				@Bandera BIT;
+			SELECT
+				@InFechaFinal=DATEADD(DAY,7,@InFechaInicio),  @InFechaTemporal=EOMONTH(@InFechaFinal), @Bandera='0';
+				--@FechaFinal=DATEADD(DAY,7,'2021-02-04'), @FechaTemporal=EOMONTH(@FechaFinal), @Bandera='0';
+			WHILE(@Bandera='0') BEGIN
+			--PRINT(@FechaFinal)
+				IF(@InFechaFinal>@InFechaTemporal) BEGIN
+					SELECT
+						@InFechaFinal=DATEADD(DAY,-8,@InFechaFinal),
+						@Bandera='1';
+				END
+				IF(@Bandera='0') BEGIN
+					SELECT
+						@InFechaFinal=DATEADD(DAY,7,@InFechaFinal);
+				END
+			END
+			PRINT(@FechaFinal)
+			INSERT INTO PlanillaMensual VALUES (@InFechaInicio, @InFechaFinal);
+		END TRY
+		BEGIN CATCH
+			INSERT INTO DBErrores VALUES (
+			SUSER_SNAME(),
+			ERROR_NUMBER(),
+			ERROR_STATE(),
+			ERROR_SEVERITY(),
+			ERROR_LINE(),
+			ERROR_PROCEDURE(),
+			ERROR_MESSAGE(),
+			GETDATE()
+			)
+		
+			SET @OutResultCode=50005;
+		END CATCH
+		SET NOCOUNT OFF;
+	END
+GO
+
+DECLARE @ResultCode INT
+EXECUTE InsertarMes '2021-02-04', @ResultCode OUTPUT
+SELECT @ResultCode
+SELECT * FROM PlanillaMensual
+
+/*CREATE PROCEDURE name
+	@InPuestoId INT,
+	@OutResultCode INT OUTPUT
+
+	AS
+	BEGIN
+		SET NOCOUNT ON;
+		BEGIN TRY
+			SET @OutResultCode=0;
+			
+		END TRY
+		BEGIN CATCH
+			INSERT INTO DBErrores VALUES (
+			SUSER_SNAME(),
+			ERROR_NUMBER(),
+			ERROR_STATE(),
+			ERROR_SEVERITY(),
+			ERROR_LINE(),
+			ERROR_PROCEDURE(),
+			ERROR_MESSAGE(),
+			GETDATE()
+			)
+		
+			SET @OutResultCode=50005;
+		END CATCH
+		SET NOCOUNT OFF;
+	END*/

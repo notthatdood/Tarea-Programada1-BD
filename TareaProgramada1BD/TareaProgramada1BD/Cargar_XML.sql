@@ -1,3 +1,6 @@
+Use TareaProgramada;
+Go
+
 Create procedure insertarCatalogos as
 
 Insert into Puesto
