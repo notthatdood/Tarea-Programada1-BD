@@ -8,11 +8,11 @@ DECLARE @doc XML
 	FROM OPENROWSET(
 				BULK 'C:\Datos_Tarea2.xml', SINGLE_CLOB
 				) AS xmlData
-DECLARE @FechaActual DATE, @CantDias INT, @OutResultCode INT, @IdSemanaActual INT;
+DECLARE @FechaActual DATE, @CantDias INT, @OutResultCode INT, @IdSemanaActual INT, @IdMesActual INT;
 SET @FechaActual=@doc.value('(/Datos/Operacion/@Fecha)[1]','date')
 SET @CantDias=1;
 SET NOCOUNT ON;
-WHILE(@CantDias<=6) --92
+WHILE(@CantDias<=60) --92
 BEGIN
 	-----------------Segmento encargado de marcar la asistencia----------------------------------
 	CREATE TABLE #TempAsistencia(Id INT IDENTITY(1,1) PRIMARY KEY,
@@ -81,15 +81,12 @@ BEGIN
 	IF(DATEPART(dw, @FechaActual)=4)
 	BEGIN
 		-----------------Crea nuevo mes en caso de iniciar el mes----------------------------------
-		IF(DATEDIFF(day, DATEADD(d,1,EOMONTH(@FechaActual,-1)), @FechaActual)<=7)BEGIN
-			EXECUTE InsertarMes @FechaActual, @OutResultCode OUTPUT
+		IF(DATEDIFF(day, DATEADD(d,1,EOMONTH(@FechaActual,-1)), @FechaActual)<=7)
+		BEGIN
+			EXECUTE InsertarMes @FechaActual, @IdMesActual OUTPUT, @OutResultCode OUTPUT
 			--SELECT @OutResultCode
 		END;
-		DECLARE @IdMes INT;
-		SELECT @IdMes=PM.Id FROM PlanillaMensual PM
-		WHERE DATEDIFF(day, PM.FechaInicio, @FechaActual)>=0
-		AND DATEDIFF(day, PM.FechaFinal, @FechaActual)<0
-		EXECUTE InsertarSemana @IdMes, @FechaActual, @IdSemanaActual OUTPUT, @OutResultCode OUTPUT
+		EXECUTE InsertarSemana @IdMesActual, @FechaActual, @IdSemanaActual OUTPUT, @OutResultCode OUTPUT
 		--SELECT @OutResultCode
 
 

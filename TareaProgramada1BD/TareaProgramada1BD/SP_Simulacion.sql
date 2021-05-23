@@ -9,6 +9,7 @@ GO
 
 CREATE PROCEDURE InsertarMes
 	@InFechaInicio DATE,
+	@OutIdMes INT OUTPUT,
 	@OutResultCode INT OUTPUT
 
 	AS
@@ -21,6 +22,7 @@ CREATE PROCEDURE InsertarMes
 				@InFechaFinal DATE,
 				@InFechaTemporal DATE,
 				@Bandera BIT;
+			SET @InFechaInicio=DATEADD(DAY,1,@InFechaInicio);
 			SELECT
 				@InFechaFinal=DATEADD(DAY,7,@InFechaInicio),  @InFechaTemporal=EOMONTH(@InFechaFinal), @Bandera='0';
 				--@FechaFinal=DATEADD(DAY,7,'2021-02-04'), @FechaTemporal=EOMONTH(@FechaFinal), @Bandera='0';
@@ -38,6 +40,11 @@ CREATE PROCEDURE InsertarMes
 			END
 			--PRINT(@InFechaFinal)
 			INSERT INTO PlanillaMensual VALUES (@InFechaInicio, @InFechaFinal);
+			SELECT TOP 1
+				@OutIdMes=PM.Id
+			FROM
+				PlanillaMensual PM
+			ORDER BY PM.Id DESC;
 		END TRY
 		BEGIN CATCH
 			INSERT INTO DBErrores VALUES (
@@ -107,8 +114,9 @@ CREATE PROCEDURE InsertarSemana
 				@InFechaFinal DATE,
 				@InFechaTemporal DATE,
 				@Bandera BIT;
+			SET @InFechaInicio=DATEADD(DAY,1,@InFechaInicio);
 			SELECT
-				@InFechaFinal=DATEADD(DAY,7,@InFechaInicio),  @InFechaTemporal=EOMONTH(@InFechaFinal), @Bandera='0';
+				@InFechaFinal=DATEADD(DAY,6,@InFechaInicio),  @InFechaTemporal=EOMONTH(@InFechaFinal), @Bandera='0';
 				--@FechaFinal=DATEADD(DAY,7,'2021-02-04'), @FechaTemporal=EOMONTH(@FechaFinal), @Bandera='0';
 			--PRINT(@InFechaFinal)
 			INSERT INTO PlanillaSemanal VALUES (@InIdMes, @InFechaInicio, @InFechaFinal);
