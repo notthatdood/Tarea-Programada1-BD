@@ -213,6 +213,93 @@ CREATE PROCEDURE InsertarJornada
 		END CATCH
 		SET NOCOUNT OFF;
 	END
+GO
+
+CREATE PROCEDURE MarcarAsistencia
+	@InFechaEntrada DATETIME,
+	@InFechaSalida DATETIME,
+	@InValorDocumentoIdentidad INT,
+	@OutResultCode INT OUTPUT
+
+	AS
+	BEGIN
+		SET NOCOUNT ON;
+		BEGIN TRY
+			SET @OutResultCode=0;
+			DECLARE @IdJornada INT;
+			SELECT @IdJornada=J.Id FROM Empleado E, Jornada J
+			WHERE E.ValorDocumentoIdentificacion=@InValorDocumentoIdentidad
+			AND E.Id=J.IdEmpleado;
+			--PRINT(@IdJornada)
+			INSERT INTO MarcaAsistencia VALUES(@IdJornada, @InFechaEntrada, @InFechaSalida);
+			
+		END TRY
+		BEGIN CATCH
+			INSERT INTO DBErrores VALUES (
+			SUSER_SNAME(),
+			ERROR_NUMBER(),
+			ERROR_STATE(),
+			ERROR_SEVERITY(),
+			ERROR_LINE(),
+			ERROR_PROCEDURE(),
+			ERROR_MESSAGE(),
+			GETDATE()
+			)
+		
+			SET @OutResultCode=50005;
+		END CATCH
+		SET NOCOUNT OFF;
+	END
+GO
+
+/*DECLARE @ResultCode INT
+EXECUTE MarcarAsistencia '2021-02-05 03:37 PM', '2021-02-05 11:39 PM',
+'71731275', @ResultCode OUTPUT
+SELECT @ResultCode*/
+
+CREATE PROCEDURE AsociarEmpleadoConFijaNoObligatoria
+	@InIdDeduccion INT,
+	@InMonto INT,
+	@InValorDocumentoIdentificacion INT,
+	@OutResultCode INT OUTPUT
+
+	AS
+	BEGIN
+		SET NOCOUNT ON;
+		BEGIN TRY
+			SET @OutResultCode=0;
+			DECLARE @IdDeduccionXEmpleado INT;
+			BEGIN TRANSACTION AsociarDeduccion
+			INSERT INTO DeduccionXEmpleado SELECT E.Id, TD.Id
+			FROM Empleado E, TipoDeduccion TD WHERE TD.Id=@InIdDeduccion AND
+			E.ValorDocumentoIdentificacion=@InValorDocumentoIdentificacion;
+			SELECT TOP 1 @IdDeduccionXEmpleado=DXE.Id FROM DeduccionXEmpleado DXE ORDER BY DXE.Id DESC;
+			INSERT INTO FijaNoObligatoria VALUES(@IdDeduccionXEmpleado, @InMonto);
+			COMMIT TRANSACTION AsociarDeduccion;
+		END TRY
+		BEGIN CATCH
+			IF @@Trancount>0 
+				ROLLBACK TRANSACTION AsociarDeduccion;
+			INSERT INTO DBErrores VALUES (
+			SUSER_SNAME(),
+			ERROR_NUMBER(),
+			ERROR_STATE(),
+			ERROR_SEVERITY(),
+			ERROR_LINE(),
+			ERROR_PROCEDURE(),
+			ERROR_MESSAGE(),
+			GETDATE()
+			)
+		
+			SET @OutResultCode=50005;
+		END CATCH
+		SET NOCOUNT OFF;
+	END
+GO
+
+/*DECLARE @ResultCode INT
+EXECUTE AsociarEmpleadoConFijaNoObligatoria'2', '10000','15442171', @ResultCode OUTPUT
+SELECT @ResultCode*/
 
 /*CREATE PROCEDURE name
 	@InPuestoId INT,
@@ -240,4 +327,5 @@ CREATE PROCEDURE InsertarJornada
 			SET @OutResultCode=50005;
 		END CATCH
 		SET NOCOUNT OFF;
-	END*/
+	END
+GO*/

@@ -12,9 +12,90 @@ DECLARE @FechaActual DATE, @CantDias INT, @OutResultCode INT, @IdSemanaActual IN
 SET @FechaActual=@doc.value('(/Datos/Operacion/@Fecha)[1]','date')
 SET @CantDias=1;
 SET NOCOUNT ON;
-WHILE(@CantDias<=2) --92
+WHILE(@CantDias<=5) --92
 BEGIN
+	-----------------Segmento encargado de marcar la asistencia----------------------------------
+	CREATE TABLE #TempAsistencia(Id INT IDENTITY(1,1) PRIMARY KEY,
+				    FechaEntrada DATETIME,
+					FechaSalida DATETIME,
+					ValorDocumentoIdentidad INT)
+	INSERT INTO #TempAsistencia
+	SELECT
+		Marca.value('@FechaEntrada','datetime') AS FechaEntrada,
+		Marca.value('@FechaSalida','datetime') AS FechaSalida,
+		Marca.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentidad
+	FROM 
+		@doc.nodes('/Datos') AS A(Datos)
+	CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
+	CROSS APPLY B.Operacion.nodes('./MarcaDeAsistencia ') AS C(Marca)
+	WHERE Operacion.value('@Fecha', 'date')=@FechaActual
+	DECLARE
+		@Cont INT, @LargoTabla INT,
+		@InFechaEntrada DATETIME, @InFechaSalida DATETIME,
+		@InMarcaValorDocumentoIdentificacion INT;
+	SELECT @Cont=1, @LargoTabla=COUNT(*) FROM #TempAsistencia
+	WHILE(@Cont<=@LargoTabla)
+	BEGIN
+		SELECT 
+			@InFechaEntrada=T.FechaEntrada, @InFechaSalida=T.FechaSalida,
+			@InMarcaValorDocumentoIdentificacion=T.ValorDocumentoIdentidad
+		FROM #TempAsistencia T
+		WHERE T.Id=@Cont;
+		EXECUTE MarcarAsistencia @InFechaEntrada, @InFechaSalida,
+		@InMarcaValorDocumentoIdentificacion, @OutResultCode OUTPUT
+		--SELECT @OutResultCode;
+		SET @Cont=@Cont+1;
+	END
+	DROP TABLE #TempAsistencia
 
+
+	-----------------Segmento encargado de asociar empleados a deducciones----------------------------------
+	CREATE TABLE #TempAsocia(Id INT IDENTITY(1,1) PRIMARY KEY,
+				    IdDeduccion INT,
+					Monto INT,
+					ValorDocumentoIdentidad INT)
+	INSERT INTO #TempAsocia
+	SELECT
+		Asocia.value('@IdDeduccion','int') AS IdDeduccion,
+		CASE WHEN
+			TRY_CAST(Asocia.value('@Monto','decimal(10,5)') AS INT) IS NULL THEN 0
+			ELSE CAST(Asocia.value('@Monto','decimal(10,5)') AS INT)
+		END
+		AS Monto,
+		Asocia.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentidad
+	FROM 
+		@doc.nodes('/Datos') AS A(Datos)
+	CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
+	CROSS APPLY B.Operacion.nodes('./AsociaEmpleadoConDeduccion  ') AS C(Asocia)
+	WHERE Operacion.value('@Fecha', 'date')=@FechaActual
+	--SELECT @FechaActual;
+	--SELECT * FROM #TempAsocia;
+	DECLARE
+		@InAsociaIdDeduccion INT, @InAsociaMonto INT,
+		@InAsociaValorDocumentoIdentificacion INT;
+	SELECT @Cont=1, @LargoTabla=COUNT(*) FROM #TempAsocia
+	WHILE(@Cont<=@LargoTabla)
+	BEGIN
+		SELECT 
+			@InAsociaIdDeduccion=T.IdDeduccion, @InAsociaMonto=T.Monto,
+			@InAsociaValorDocumentoIdentificacion=T.ValorDocumentoIdentidad
+		FROM #TempAsocia T
+		WHERE T.Id=@Cont;
+		IF(@InAsociaMonto=0)
+		BEGIN
+			
+			--SELECT @OutResultCode;
+			SET @InAsociaMonto=@InAsociaMonto;
+		END
+		ELSE IF(@InAsociaMonto>0)
+		BEGIN
+			EXECUTE AsociarEmpleadoConFijaNoObligatoria @InAsociaIdDeduccion, @InAsociaMonto,
+			@InAsociaValorDocumentoIdentificacion, @OutResultCode OUTPUT
+			--SELECT @OutResultCode;
+		END
+		SET @Cont=@Cont+1;
+	END
+	DROP TABLE #TempAsocia
 
 
 	--Este IF revisa si se trata o no de un jueves-----------------------------------------------------
@@ -23,14 +104,14 @@ BEGIN
 		-----------------Crea nuevo mes en caso de iniciar el mes----------------------------------
 		IF(DATEDIFF(day, DATEADD(d,1,EOMONTH(@FechaActual,-1)), @FechaActual)<=7)BEGIN
 			EXECUTE InsertarMes @FechaActual, @OutResultCode OUTPUT
-			SELECT @OutResultCode
+			--SELECT @OutResultCode
 		END;
 		DECLARE @IdMes INT;
 		SELECT @IdMes=PM.Id FROM PlanillaMensual PM
 		WHERE DATEDIFF(day, PM.FechaInicio, @FechaActual)>=0
 		AND DATEDIFF(day, PM.FechaFinal, @FechaActual)<0
 		EXECUTE InsertarSemana @IdMes, @FechaActual, @IdSemanaActual OUTPUT, @OutResultCode OUTPUT
-		SELECT @OutResultCode
+		--SELECT @OutResultCode
 
 
 		-----------------Segmento encargado de insertar empleados nuevos----------------------------------
@@ -59,7 +140,7 @@ BEGIN
 			@InEmpleadoNombre VARCHAR(50), @InEmpleadoIdTipoIdentificacion INT,
 			@InEmpleadoValorDocumentoIdentificacion INT, @InEmpleadoFechaNacimiento DATE,
 			@InEmpleadoIdPuesto INT, @InEmpleadoIdDepartamento INT, @InEmpleadoUsername VARCHAR(30),
-			@InEmpleadoPwd VARCHAR(30), @Cont INT, @LargoTabla INT;
+			@InEmpleadoPwd VARCHAR(30);
 		SELECT @Cont=1, @LargoTabla=COUNT(*) FROM #TempEmpleados
 		WHILE(@Cont<=@LargoTabla)
 		BEGIN
@@ -77,7 +158,7 @@ BEGIN
 			EXECUTE InsertarEmpleados @InEmpleadoNombre, @InEmpleadoIdTipoIdentificacion,
 				@InEmpleadoValorDocumentoIdentificacion, @InEmpleadoFechaNacimiento, @InEmpleadoIdPuesto,
 				@InEmpleadoIdDepartamento, @InEmpleadoUsername, @InEmpleadoPwd, @OutResultCode OUTPUT
-			SELECT @OutResultCode;
+			--SELECT @OutResultCode;
 			SET @Cont=@Cont+1;
 		END
 		DROP TABLE #TempEmpleados
@@ -111,7 +192,7 @@ BEGIN
 			WHERE T.Id=@Cont;
 			EXECUTE InsertarJornada @InIdJornada, @InJornadaValorDocumentoIdentificacion,
 			@IdSemanaActual, @OutResultCode OUTPUT
-			SELECT @OutResultCode;
+			--SELECT @OutResultCode;
 			SET @Cont=@Cont+1;
 		END
 		DROP TABLE #TempJornada
