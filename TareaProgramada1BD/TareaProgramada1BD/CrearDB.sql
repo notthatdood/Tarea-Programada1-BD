@@ -96,7 +96,8 @@ Create table Jornada ( Id int IDENTITY(1,1) PRIMARY KEY,
 						FOREIGN KEY (IdSemana) REFERENCES PlanillaSemanal (Id))
 GO
 
-Create table PlanillaSemanalXEmpleado ( IdSemana int primary key,
+Create table PlanillaSemanalXEmpleado ( Id int IDENTITY(1,1) PRIMARY KEY,
+						IdSemana int,
 						IdEmpleado int,
 						SalarioNeto int,
 						FOREIGN KEY (IdSemana) REFERENCES PlanillaSemanal (Id),
@@ -105,7 +106,8 @@ GO
 
 
 
-Create table PlanillaMensualXEmpleado ( IdMes int primary key,
+Create table PlanillaMensualXEmpleado ( Id int IDENTITY(1,1) PRIMARY KEY,
+						IdMes int,
 						IdEmpleado int,
 						SalarioNeto int,
 						SalarioTotal int,
@@ -118,7 +120,7 @@ Create table MovimientoPlanilla ( Id int IDENTITY(1,1) PRIMARY KEY,
 						Monto int,
 						IdSemana int,
 						TipoMovimiento int,
-						FOREIGN KEY (IdSemana) REFERENCES PlanillaSemanalXEmpleado (IdSemana),
+						FOREIGN KEY (IdSemana) REFERENCES PlanillaSemanalXEmpleado (Id),
 						FOREIGN KEY (TipoMovimiento) REFERENCES TipoMovimiento (Id))
 GO
 
@@ -169,5 +171,5 @@ Create table DeduccionXEmpleadoXMes ( Id int IDENTITY(1,1) primary key,
 						IdTipoDeduccion int,
 						FOREIGN KEY (IdTipoDeduccion) REFERENCES TipoDeduccion (Id),
 						FOREIGN KEY (IdEmpleado) REFERENCES Empleado (Id),
-						FOREIGN KEY (Id) REFERENCES PlanillaMensualXEmpleado (IdMes))
+						FOREIGN KEY (Id) REFERENCES PlanillaMensualXEmpleado (Id))
 GO

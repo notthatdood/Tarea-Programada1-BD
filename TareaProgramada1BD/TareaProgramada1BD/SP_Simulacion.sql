@@ -444,9 +444,9 @@ CREATE PROCEDURE EliminarEmpleados
 	END
 GO
 
-DECLARE @ResultCode INT
+/*DECLARE @ResultCode INT
 EXECUTE EliminarEmpleados '15442171', @ResultCode OUTPUT
-SELECT @ResultCode
+SELECT @ResultCode*/
 
 /*DECLARE @ResultCode INT
 EXECUTE DesasociarEmpleadoConDeduccion '4', '15442171', @ResultCode OUTPUT
@@ -456,6 +456,40 @@ SELECT @ResultCode*/
 /*DECLARE @ResultCode INT
 EXECUTE AsociarEmpleadoConFijaNoObligatoria'2', '10000','15442171', @ResultCode OUTPUT
 SELECT @ResultCode*/
+
+DECLARE @ResultCode INT
+EXECUTE InsertarMesXEmpleado '2', @ResultCode OUTPUT
+SELECT @ResultCode
+
+CREATE PROCEDURE InsertarMesXEmpleado
+	@InIdMesActual INT,
+	@OutResultCode INT OUTPUT
+
+	AS
+	BEGIN
+		SET NOCOUNT ON;
+		BEGIN TRY
+			SET @OutResultCode=0;
+		INSERT INTO PlanillaMensualXEmpleado SELECT @InIdMesActual, E.Id, 0, 0
+		FROM PlanillaMensual PM, Empleado E WHERE PM.Id=@InIdMesActual;
+		END TRY
+		BEGIN CATCH
+			INSERT INTO DBErrores VALUES (
+			SUSER_SNAME(),
+			ERROR_NUMBER(),
+			ERROR_STATE(),
+			ERROR_SEVERITY(),
+			ERROR_LINE(),
+			ERROR_PROCEDURE(),
+			ERROR_MESSAGE(),
+			GETDATE()
+			)
+		
+			SET @OutResultCode=50005;
+		END CATCH
+		SET NOCOUNT OFF;
+	END
+GO
 
 /*CREATE PROCEDURE name
 	@InPuestoId INT,

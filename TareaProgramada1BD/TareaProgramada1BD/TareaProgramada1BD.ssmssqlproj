@@ -19,18 +19,6 @@
     </LogicalFolder>
     <LogicalFolder Name="Queries" Type="0" Sorted="true">
       <Items>
-        <FileNode Name="BorrarEmpleados.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
-          <AssociatedConnUserName />
-          <FullPath>BorrarEmpleados.sql</FullPath>
-        </FileNode>
-        <FileNode Name="BorrarPuestos.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
-          <AssociatedConnUserName />
-          <FullPath>BorrarPuestos.sql</FullPath>
-        </FileNode>
         <FileNode Name="BorrarTodo.sql">
           <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
           <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
@@ -49,48 +37,6 @@
           <AssociatedConnUserName />
           <FullPath>CrearDB.sql</FullPath>
         </FileNode>
-        <FileNode Name="EditarEmpleados.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
-          <AssociatedConnUserName />
-          <FullPath>EditarEmpleados.sql</FullPath>
-        </FileNode>
-        <FileNode Name="EditarPuestos.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
-          <AssociatedConnUserName />
-          <FullPath>EditarPuestos.sql</FullPath>
-        </FileNode>
-        <FileNode Name="InsertarPuestos.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
-          <AssociatedConnUserName />
-          <FullPath>InsertarPuestos.sql</FullPath>
-        </FileNode>
-        <FileNode Name="ListarDepartamentos.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
-          <AssociatedConnUserName />
-          <FullPath>ListarDepartamentos.sql</FullPath>
-        </FileNode>
-        <FileNode Name="ListarEmpleados.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
-          <AssociatedConnUserName />
-          <FullPath>ListarEmpleados.sql</FullPath>
-        </FileNode>
-        <FileNode Name="ListarPuestos.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
-          <AssociatedConnUserName />
-          <FullPath>ListarPuestos.sql</FullPath>
-        </FileNode>
-        <FileNode Name="ListarTarjetas.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
-          <AssociatedConnUserName />
-          <FullPath>ListarTarjetas.sql</FullPath>
-        </FileNode>
         <FileNode Name="Script_Simulacion.sql">
           <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
           <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
@@ -102,6 +48,12 @@
           <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>SP_Simulacion.sql</FullPath>
+        </FileNode>
+        <FileNode Name="SP_Tarea1.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-TE607J4\MSSQLSERVER02</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>SP_Tarea1.sql</FullPath>
         </FileNode>
         <FileNode Name="Trigger.sql">
           <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-TE607J4\MSSQLSERVER02:True</AssociatedConnectionMoniker>

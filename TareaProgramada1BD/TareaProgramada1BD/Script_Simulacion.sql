@@ -11,6 +11,7 @@ DECLARE @doc XML
 DECLARE @FechaActual DATE, @CantDias INT, @OutResultCode INT, @IdSemanaActual INT, @IdMesActual INT;
 SET @FechaActual=@doc.value('(/Datos/Operacion/@Fecha)[1]','date')
 SET @CantDias=1;
+SET @IdMesActual=0;
 SET NOCOUNT ON;
 WHILE(@CantDias<=60) --92
 BEGIN
@@ -80,6 +81,17 @@ BEGIN
 	--Este IF revisa si se trata o no de un jueves-----------------------------------------------------
 	IF(DATEPART(dw, @FechaActual)=4)
 	BEGIN
+		---------------------Este segmento crea las PlanillaXEmpleado y genera los movimientos---------------
+		IF(@IdMesActual>0)
+		BEGIN
+			IF(DATEDIFF(day, DATEADD(d,1,EOMONTH(@FechaActual,-1)), @FechaActual)<=7)
+			BEGIN
+				EXECUTE InsertarMesXEmpleado @IdMesActual, @OutResultCode OUTPUT
+				--SELECT @OutResultCode
+			END;
+		END
+
+
 		-----------------Crea nuevo mes en caso de iniciar el mes----------------------------------
 		IF(DATEDIFF(day, DATEADD(d,1,EOMONTH(@FechaActual,-1)), @FechaActual)<=7)
 		BEGIN
