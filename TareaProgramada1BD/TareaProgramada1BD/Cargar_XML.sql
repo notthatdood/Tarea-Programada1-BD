@@ -1,136 +1,140 @@
 Use TareaProgramada;
 Go
 
-Create procedure insertarCatalogos as
+CREATE PROCEDURE insertarCatalogos AS
 
-Insert into Puesto
+	INSERT INTO Puesto
 
-Select 
+	SELECT 
 
-A.CatalogoXML.value('@Id','int') as Id,
-A.CatalogoXML.value('@Nombre','varchar(40)') as Nombre,
-A.CatalogoXML.value('@SalarioXHora','int') as SalarioXHora,
-'1' as Activo
+		A.CatalogoXML.value('@Id','int') AS Id,
+		A.CatalogoXML.value('@Nombre','varchar(40)') AS Nombre,
+		A.CatalogoXML.value('@SalarioXHora','int') AS SalarioXHora,
+		'1' AS Activo
 
-From
-(
-Select cast(CatalogoXML as xml) from
-Openrowset(Bulk 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
-) as S(CatalogoXML)
+	FROM
+		(
+		SELECT cast(CatalogoXML AS xml) FROM
+		OPENROWSET(BULK 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
+		) AS S(CatalogoXML)
 
-Cross apply CatalogoXML.nodes('Datos/Catalogos/Puestos/Puesto') as A(CatalogoXML)
+	CROSS APPLY CatalogoXML.nodes('Datos/Catalogos/Puestos/Puesto') AS A(CatalogoXML)
 
-Insert into TipoDocuIdentidad
+	INSERT INTO TipoDocuIdentidad
 
-Select 
+	SELECT 
 
-A.CatalogoXML.value('@Id','int') as Id,
-A.CatalogoXML.value('@Nombre','varchar(40)') as Nombre
-From
-(
-Select cast(CatalogoXML as xml) from
-Openrowset(Bulk 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
-) as S(CatalogoXML)
+		A.CatalogoXML.value('@Id','int') AS Id,
+		A.CatalogoXML.value('@Nombre','varchar(40)') AS Nombre
+	FROM
+		(
+		SELECT cast(CatalogoXML AS xml) FROM
+		OPENROWSET(BULK 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
+		) AS S(CatalogoXML)
 
-Cross apply CatalogoXML.nodes('Datos/Catalogos/Tipos_de_Documento_de_Identificacion/TipoIdDoc') as A(CatalogoXML)
+	CROSS APPLY CatalogoXML.nodes('Datos/Catalogos/Tipos_de_Documento_de_Identificacion/TipoIdDoc') as A(CatalogoXML)
 
-Insert into Departamento
+	INSERT INTO Departamento
 
-Select 
+	SELECT 
 
-A.CatalogoXML.value('@Id','int') as Id,
-A.CatalogoXML.value('@Nombre','varchar(40)') as Nombre
-From
-(
-Select cast(CatalogoXML as xml) from
-Openrowset(Bulk 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
-) as S(CatalogoXML)
+		A.CatalogoXML.value('@Id','int') AS Id,
+		A.CatalogoXML.value('@Nombre','varchar(40)') AS Nombre
+	FROM
+		(
+		SELECT cast(CatalogoXML AS xml) FROM
+		OPENROWSET(BULK 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
+		) AS S(CatalogoXML)
 
-Cross apply CatalogoXML.nodes('Datos/Catalogos/Departamentos/Departamento') as A(CatalogoXML)
+	CROSS APPLY CatalogoXML.nodes('Datos/Catalogos/Departamentos/Departamento') as A(CatalogoXML)
 
-Insert into TiposDeJornada
+	INSERT INTO TiposDeJornada
 
-Select 
+	SELECT 
 
-A.CatalogoXML.value('@Id','int') as Id,
-A.CatalogoXML.value('@Nombre','varchar(50)') as Nombre,
-A.CatalogoXML.value('@HoraEntrada','time') as HoraEntrada,
-A.CatalogoXML.value('@HoraSalida','time') as HoraSalida
-From
-(
-Select cast(CatalogoXML as xml) from
-Openrowset(Bulk 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
-) as S(CatalogoXML)
+		A.CatalogoXML.value('@Id','int') AS Id,
+		A.CatalogoXML.value('@Nombre','varchar(50)') AS Nombre,
+		A.CatalogoXML.value('@HoraEntrada','time') AS HoraEntrada,
+		A.CatalogoXML.value('@HoraSalida','time') AS HoraSalida
+	FROM
+		(
+		SELECT cast(CatalogoXML AS xml) FROM
+		OPENROWSET(BULK 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
+		) AS S(CatalogoXML)
 
-Cross apply CatalogoXML.nodes('Datos/Catalogos/TiposDeJornada/TipoDeJornada') as A(CatalogoXML)
+	CROSS APPLY CatalogoXML.nodes('Datos/Catalogos/TiposDeJornada/TipoDeJornada') as A(CatalogoXML)
 
-Insert into TipoMovimiento
+	INSERT INTO TipoMovimiento
 
-Select 
+	SELECT 
 
-A.CatalogoXML.value('@Id','int') as Id,
-A.CatalogoXML.value('@Nombre','varchar(50)') as Nombre
-From
-(
-Select cast(CatalogoXML as xml) from
-Openrowset(Bulk 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
-) as S(CatalogoXML)
+		A.CatalogoXML.value('@Id','int') AS Id,
+		A.CatalogoXML.value('@Nombre','varchar(50)') AS Nombre
+	FROM
+		(
+		SELECT cast(CatalogoXML AS xml) FROM
+		OPENROWSET(BULK 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
+		) AS S(CatalogoXML)
 
-Cross apply CatalogoXML.nodes('Datos/Catalogos/TiposDeMovimiento/TipoDeMovimiento') as A(CatalogoXML)
+	CROSS APPLY CatalogoXML.nodes('Datos/Catalogos/TiposDeMovimiento/TipoDeMovimiento') as A(CatalogoXML)
 
-Insert into Feriados
+	INSERT INTO Feriados
 
-Select 
+	SELECT 
 
-A.CatalogoXML.value('@Fecha','date') as Fecha,
-A.CatalogoXML.value('@Nombre','varchar(50)') as Nombre
-From
-(
-Select cast(CatalogoXML as xml) from
-Openrowset(Bulk 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
-) as S(CatalogoXML)
+		A.CatalogoXML.value('@Fecha','date') AS Fecha,
+		A.CatalogoXML.value('@Nombre','varchar(50)') AS Nombre
+	FROM
+		(
+		SELECT cast(CatalogoXML AS xml) FROM
+		OPENROWSET(BULK 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
+		) AS S(CatalogoXML)
 
-Cross apply CatalogoXML.nodes('Datos/Catalogos/Feriados/Feriado') as A(CatalogoXML)
+	CROSS APPLY CatalogoXML.nodes('Datos/Catalogos/Feriados/Feriado') as A(CatalogoXML)
 
-Insert into TipoDeduccion
+	INSERT INTO TipoDeduccion
 
-Select 
+	SELECT 
 
-A.CatalogoXML.value('@Id','int') as Id,
-A.CatalogoXML.value('@Nombre','varchar(50)') as Nombre,
-case A.CatalogoXML.value('@Obligatorio','varchar(10)') WHEN  'Si' THEN 1 ELSE 0 END as Obligatorio,
-case A.CatalogoXML.value('@Porcentual' ,'varchar(10)') WHEN  'Si' THEN 1 ELSE 0 END as Porcentual,
-A.CatalogoXML.value('@Valor','decimal(3,3)') as Valor
-From
-(
-Select cast(CatalogoXML as xml) from
-Openrowset(Bulk 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
-) as S(CatalogoXML)
+		A.CatalogoXML.value('@Id','int') AS Id,
+		A.CatalogoXML.value('@Nombre','varchar(50)') AS Nombre,
+		CASE A.CatalogoXML.value('@Obligatorio','varchar(10)')
+		WHEN  'Si' THEN 1 ELSE 0 END AS Obligatorio,
+		CASE A.CatalogoXML.value('@Porcentual' ,'varchar(10)')
+		WHEN  'Si' THEN 1 ELSE 0 END AS Porcentual,
+		A.CatalogoXML.value('@Valor','decimal(3,3)') AS Valor
+	FROM
+		(
+		SELECT cast(CatalogoXML AS xml) FROM
+		OPENROWSET(BULK 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
+		) AS S(CatalogoXML)
 
-Cross apply CatalogoXML.nodes('Datos/Catalogos/Deducciones/TipoDeDeduccion') as A(CatalogoXML)
+	CROSS APPLY CatalogoXML.nodes('Datos/Catalogos/Deducciones/TipoDeDeduccion') as A(CatalogoXML)
 
-INSERT INTO PorcentualSiObligatoria SELECT TD.Id, TD.Valor
-FROM TipoDeduccion TD WHERE TD.Obligatorio=1;
+	INSERT INTO PorcentualSiObligatoria
+	SELECT
+		TD.Id, TD.Valor
+	FROM
+		TipoDeduccion TD WHERE TD.Obligatorio=1;
 
-CREATE TABLE #Temp(Id INT IDENTITY(1,1) PRIMARY KEY, IdDeduccion INT,
-					    Obligatorio INT)
-INSERT INTO #Temp SELECT TD.Id, TD.Obligatorio FROM TipoDeduccion TD;
-DECLARE @Cont INT, @LargoTabla INT, @Aux BIT;
-SELECT @Cont=1, @LargoTabla=COUNT(*) FROM #Temp
-	WHILE(@Cont<=@LargoTabla)
-	BEGIN
-		SELECT @Aux=T.Obligatorio FROM #Temp T WHERE T.Id=@Cont;
-		IF(@Aux=1)
+	CREATE TABLE #Temp(Id INT IDENTITY(1,1) PRIMARY KEY, IdDeduccion INT, Obligatorio INT)
+	INSERT INTO #Temp SELECT TD.Id, TD.Obligatorio FROM TipoDeduccion TD;
+	DECLARE @Cont INT, @LargoTabla INT, @Aux BIT;
+	SELECT @Cont=1, @LargoTabla=COUNT(*) FROM #Temp
+		WHILE(@Cont<=@LargoTabla)
 		BEGIN
-			INSERT INTO TipoMovimientoDeduccion VALUES('4', @Cont)
+			SELECT @Aux=T.Obligatorio FROM #Temp T WHERE T.Id=@Cont;
+			IF(@Aux=1)
+			BEGIN
+				INSERT INTO TipoMovimientoDeduccion VALUES('4', @Cont)
+			END
+			ELSE
+			BEGIN
+				INSERT INTO TipoMovimientoDeduccion VALUES('5', @Cont)
+			END
+			SET @Cont=@Cont+1;
 		END
-		ELSE
-		BEGIN
-			INSERT INTO TipoMovimientoDeduccion VALUES('5', @Cont)
-		END
-		SET @Cont=@Cont+1;
-	END
-DROP TABLE #Temp
+	DROP TABLE #Temp
 GO
 
 /*Create procedure insertarEmpleado as
@@ -156,26 +160,26 @@ Cross apply EmpleadosXML.nodes('Datos/Empleados/Empleado') as A(EmpleadoXML)
 
 GO*/
 
-Create procedure insertarUsuario as
+CREATE PROCEDURE insertarUsuario AS
 
-Insert into Usuario
+	INSERT INTO Usuario
 
-Select 
+	SELECT 
 
-A.UsuarioXML.value('@username','varchar(30)') as Username,
-A.UsuarioXML.value('@pwd','varchar(30)') as Pwd,
-A.UsuarioXML.value('@tipo','int') as Tipo
+		A.UsuarioXML.value('@username','varchar(30)') AS Username,
+		A.UsuarioXML.value('@pwd','varchar(30)') AS Pwd,
+		A.UsuarioXML.value('@tipo','int') AS Tipo
 
-From
-(
-Select cast(UsuariosXML as xml) from
-Openrowset(Bulk 'C:\Datos_Tarea2.xml', Single_Blob) T(UsuariosXML)
-) as S(UsuariosXML)
+	FROM
+		(
+		SELECT cast(UsuariosXML AS xml) FROM
+		OPENROWSET(BULK 'C:\Datos_Tarea2.xml', Single_Blob) T(UsuariosXML)
+		) AS S(UsuariosXML)
 
-Cross apply UsuariosXML.nodes('Datos/Usuarios/Usuario') as A(UsuarioXML)
+	CROSS APPLY UsuariosXML.nodes('Datos/Usuarios/Usuario') as A(UsuarioXML)
 
 GO
 
-Execute insertarCatalogos
+EXECUTE insertarCatalogos
 --Execute insertarEmpleado
-Execute insertarUsuario
+EXECUTE insertarUsuario

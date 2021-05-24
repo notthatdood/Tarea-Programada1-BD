@@ -7,7 +7,7 @@ CREATE PROCEDURE ListarUsuarios
 	BEGIN
 		SET NOCOUNT ON;
 		BEGIN TRY
-			SELECT Id,Username,Pwd FROM Empleado WHERE Empleado.Activo=1
+			SELECT E.Id, E.Username, E.Pwd FROM Empleado E WHERE E.Activo=1
 		END TRY
 		BEGIN CATCH
 			INSERT INTO DBErrores VALUES (
@@ -27,6 +27,7 @@ CREATE PROCEDURE ListarUsuarios
 --EXECUTE ListarDepartamento
 GO
 
+--ListarUsuarios
 
 CREATE PROCEDURE ListarSemana
 	@InIdEmpleado INT
@@ -232,6 +233,9 @@ CREATE PROCEDURE ListarMes
 	END
 GO
 
+--EXEC ListarDeduccionesMes'12'
+--EXEC ListarDeduccionesSemana '8'
+
 CREATE PROCEDURE ListarDeduccionesSemana
 	@InIdPlanillaXEmpleado INT
 
@@ -239,8 +243,8 @@ CREATE PROCEDURE ListarDeduccionesSemana
 	BEGIN
 		SET NOCOUNT ON;
 		BEGIN TRY
-			DECLARE @InIdPlanillaXEmpleado INT;
-			SET @InIdPlanillaXEmpleado=20;
+			/*DECLARE @InIdPlanillaXEmpleado INT;
+			SET @InIdPlanillaXEmpleado=14;*/
 			SELECT
 				TD.Nombre, TD.Valor, TD.Porcentual, MP.Monto
 			FROM
@@ -249,6 +253,7 @@ CREATE PROCEDURE ListarDeduccionesSemana
 			WHERE
 				MP.IdSemana=@InIdPlanillaXEmpleado AND MD.Id=MP.Id AND MD.IdDeduccionXEmpleado=DXE.Id
 				AND MP.TipoMovimiento=TM.Id AND TM.Id=TMD.IdMovimiento AND TMD.IdDeduccion=TD.Id
+
 		END TRY
 		BEGIN CATCH
 			INSERT INTO DBErrores VALUES (
