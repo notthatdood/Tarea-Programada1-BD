@@ -4,7 +4,7 @@ CREATE PROCEDURE ListarUsuarios
 	BEGIN
 		SET NOCOUNT ON;
 		BEGIN TRY
-			SELECT Id,Username,Pwd FROM Empleado ORDER BY Id
+			SELECT Id,Username,Pwd FROM Empleado WHERE Empleado.Activo=1
 		END TRY
 		BEGIN CATCH
 			INSERT INTO DBErrores VALUES (
