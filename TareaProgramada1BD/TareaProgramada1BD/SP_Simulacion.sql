@@ -549,7 +549,7 @@ CREATE PROCEDURE CrearMovimientoCreditoDia
 		BEGIN TRY
 			SET @OutResultCode=0;
 		DECLARE @IdSemanaXEmpleado INT, @Monto INT, @HorasLaboradas INT,
-		@HorasEsperadas INT, @EsFeriado BIT, @IdMovimiento INT;
+		@HorasEsperadas INT, @EsFeriado BIT, @IdMovimiento INT, @IdE INT, @IdMes INT;
 		--
 		/*DECLARE @InFechaEntrada DATETIME, @InFechaSalida DATETIME, @InValorDocumentoIdentificacion INT,
 		@InIdSemana INT;
@@ -595,7 +595,7 @@ CREATE PROCEDURE CrearMovimientoCreditoDia
 		BEGIN TRANSACTION Movimiento;
 		IF(@HorasLaboradas<=@HorasEsperadas)
 		BEGIN
-			INSERT INTO MovimientoPlanilla VALUES(@InFechaActual,@Monto*@HorasLaboradas,
+			INSERT INTO MovimientoPlanilla VALUES(@InFechaActual,(@Monto*@HorasLaboradas),
 			@IdSemanaXEmpleado,'1');
 			SELECT TOP 1
 				@IdMovimiento=MP.Id
@@ -604,12 +604,12 @@ CREATE PROCEDURE CrearMovimientoCreditoDia
 			ORDER BY MP.Id DESC;
 			INSERT INTO MovimientoHoras VALUES(@IdMovimiento, @InIdMarcaAsistencia);
 			UPDATE
-				PlanillaSemanalXEmpleado SET SalarioNeto=SalarioNeto+@Monto*@HorasLaboradas
+				PlanillaSemanalXEmpleado SET SalarioNeto=SalarioNeto+(@Monto*@HorasLaboradas)
 			WHERE PlanillaSemanalXEmpleado.Id=@IdSemanaXEmpleado;
 		END
 		ELSE
 		BEGIN
-			INSERT INTO MovimientoPlanilla VALUES(@InFechaActual,@Monto*@HorasEsperadas,
+			INSERT INTO MovimientoPlanilla VALUES(@InFechaActual,(@Monto*@HorasEsperadas),
 			@IdSemanaXEmpleado,'1');
 			SELECT TOP 1
 				@IdMovimiento=MP.Id
@@ -618,14 +618,14 @@ CREATE PROCEDURE CrearMovimientoCreditoDia
 			ORDER BY MP.Id DESC;
 			INSERT INTO MovimientoHoras VALUES(@IdMovimiento, @InIdMarcaAsistencia);
 			UPDATE
-				PlanillaSemanalXEmpleado SET SalarioNeto=SalarioNeto+@Monto*@HorasEsperadas
+				PlanillaSemanalXEmpleado SET SalarioNeto=SalarioNeto+(@Monto*@HorasEsperadas)
 			WHERE PlanillaSemanalXEmpleado.Id=@IdSemanaXEmpleado;
 
 
-			SET @HorasLaboradas=@HorasLaboradas-@HorasEsperadas;
+			SELECT @HorasLaboradas=@HorasLaboradas-@HorasEsperadas;
 			IF(@EsFeriado=0)
 			BEGIN
-				INSERT INTO MovimientoPlanilla VALUES(@InFechaActual,@Monto*@HorasLaboradas*1.5,
+				INSERT INTO MovimientoPlanilla VALUES(@InFechaActual,(@Monto*@HorasLaboradas*1.5),
 				@IdSemanaXEmpleado,'2');
 				SELECT TOP 1
 					@IdMovimiento=MP.Id
@@ -634,12 +634,12 @@ CREATE PROCEDURE CrearMovimientoCreditoDia
 				ORDER BY MP.Id DESC;
 				INSERT INTO MovimientoHoras VALUES(@IdMovimiento, @InIdMarcaAsistencia)
 				UPDATE
-					PlanillaSemanalXEmpleado SET SalarioNeto=SalarioNeto+@Monto*@HorasLaboradas*1.5
+					PlanillaSemanalXEmpleado SET SalarioNeto=SalarioNeto+(@Monto*@HorasLaboradas*1.5)
 				WHERE PlanillaSemanalXEmpleado.Id=@IdSemanaXEmpleado;
 			END
 			ELSE
 			BEGIN
-				INSERT INTO MovimientoPlanilla VALUES(@InFechaActual,@Monto*@HorasLaboradas*2,
+				INSERT INTO MovimientoPlanilla VALUES(@InFechaActual,(@Monto*@HorasLaboradas*2),
 				@IdSemanaXEmpleado,'3');
 				SELECT TOP 1
 					@IdMovimiento=MP.Id
@@ -648,11 +648,19 @@ CREATE PROCEDURE CrearMovimientoCreditoDia
 				ORDER BY MP.Id DESC;
 				INSERT INTO MovimientoHoras VALUES(@IdMovimiento, @InIdMarcaAsistencia)
 				UPDATE
-					PlanillaSemanalXEmpleado SET SalarioNeto=SalarioNeto+@Monto*@HorasLaboradas*2
+					PlanillaSemanalXEmpleado SET SalarioNeto=SalarioNeto+(@Monto*@HorasLaboradas*2)
 				WHERE PlanillaSemanalXEmpleado.Id=@IdSemanaXEmpleado;
 			END
 		END
 		--Monto*Horas
+		SELECT @IdMes=PM.Id
+		FROM PlanillaMensual PM, PlanillaSemanal PS, PlanillaSemanalXEmpleado PSX
+		WHERE PM.Id=PS.IdMes AND PS.Id=PSX.IdSemana AND PSX.Id=@IdSemanaXEmpleado;
+		SELECT @Monto=PSX.SalarioNeto FROM PlanillaSemanalXEmpleado PSX WHERE PSX.Id=@IdSemanaXEmpleado;
+		SELECT @IdE=E.Id FROM Empleado E WHERE E.ValorDocumentoIdentificacion=@InValorDocumentoIdentificacion;
+		UPDATE PlanillaMensualXEmpleado
+		SET SalarioTotal=SalarioTotal+@Monto
+		WHERE PlanillaMensualXEmpleado.IdMes=@IdMes AND PlanillaMensualXEmpleado.IdEmpleado=@IdE;
 
 
 		COMMIT TRANSACTION Movimiento;
@@ -691,7 +699,7 @@ CREATE PROCEDURE CrearMovimientoDebito
 		SET NOCOUNT ON;
 		BEGIN TRY
 			SET @OutResultCode=0;
-		DECLARE @Monto INT, @IdMovimiento INT, @TipoMovD INT, @EsPorcentual INT, @TipoMov INT;
+		DECLARE @Monto INT, @IdMovimiento INT, @TipoMovD INT, @EsPorcentual INT, @TipoMov INT, @IdMes INT, @IdE INT;
 
 		SELECT
 			@Monto=PSX.SalarioNeto
@@ -761,6 +769,16 @@ CREATE PROCEDURE CrearMovimientoDebito
 			MovimientoPlanilla MP
 		ORDER BY MP.Id DESC;
 		INSERT INTO MovimientoDeduccion VALUES(@IdMovimiento, @InIdDeduccionXEmpleado)
+
+		SELECT @IdMes=PM.Id
+		FROM PlanillaMensual PM, PlanillaSemanal PS, PlanillaSemanalXEmpleado PSX
+		WHERE PM.Id=PS.IdMes AND PS.Id=PSX.IdSemana AND PSX.Id=@InIdSemanaXEmpleado;
+		SELECT @Monto=PSX.SalarioNeto FROM PlanillaSemanalXEmpleado PSX WHERE PSX.Id=@InIdSemanaXEmpleado;
+		SELECT @IdE=DXE.IdEmpleado FROM DeduccionXEmpleado DXE
+		WHERE DXE.Id=@InIdDeduccionXEmpleado;
+		UPDATE PlanillaMensualXEmpleado
+		SET SalarioNeto=SalarioNeto+@Monto
+		WHERE PlanillaMensualXEmpleado.IdMes=@IdMes AND PlanillaMensualXEmpleado.IdEmpleado=@IdE;
 
 
 		COMMIT TRANSACTION Debitar;

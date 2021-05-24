@@ -120,7 +120,7 @@ BEGIN
 			FROM PlanillaSemanalXEmpleado PSX WHERE PSX.IdSemana=@IdSemanaActual ORDER BY PSX.Id ASC;
 			WHILE(@IdSemanaXEmpleadoIndice<=@IdSemanaXEmpleadoTemp)
 			BEGIN
-				DECLARE @IdDeduccionXEmpleadoTemp INT, @IdDeduccionXEmpleadoIndice INT;
+				/*DECLARE @IdDeduccionXEmpleadoTemp INT, @IdDeduccionXEmpleadoIndice INT;
 				SELECT TOP 1 @IdDeduccionXEmpleadoTemp=DXE.Id
 				FROM DeduccionXEmpleado DXE, PlanillaSemanalXEmpleado PSX
 				WHERE DXE.IdEmpleado=PSX.IdEmpleado AND PSX.Id=@IdSemanaXEmpleadoIndice
@@ -129,15 +129,25 @@ BEGIN
 				SELECT TOP 1 @IdDeduccionXEmpleadoIndice=DXE.Id
 				FROM DeduccionXEmpleado DXE, PlanillaSemanalXEmpleado PSX
 				WHERE DXE.IdEmpleado=PSX.IdEmpleado AND PSX.Id=@IdSemanaXEmpleadoIndice
-				ORDER BY DXE.Id ASC;
-
-				WHILE(@IdDeduccionXEmpleadoIndice<=@IdDeduccionXEmpleadoTemp)
+				ORDER BY DXE.Id ASC;*/
+				CREATE TABLE #TempDXE(Id INT IDENTITY(1,1) PRIMARY KEY,
+						IdDXE INT,
+						IdEmpleado INT,
+						IdTipoDeduccion INT,)
+				INSERT INTO #TempDXE SELECT DXE.Id, DXE.IdEmpleado, DXE.IdTipoDeduccion
+				FROM DeduccionXEmpleado DXE, PlanillaSemanalXEmpleado PSX
+				WHERE DXE.IdEmpleado=PSX.IdEmpleado AND PSX.Id=@IdSemanaXEmpleadoIndice;
+				SELECT @Cont=1, @LargoTabla=COUNT(*) FROM #TempDXE
+				WHILE(@Cont<=@LargoTabla)
 				BEGIN
+					DECLARE @IdDeduccionXEmpleadoIndice INT;
+					SELECT @IdDeduccionXEmpleadoIndice=T.IdDXE FROM #TempDXE T WHERE T.Id=@Cont;
 					EXECUTE CrearMovimientoDebito @FechaActual, @IdSemanaXEmpleadoIndice,
 					@IdDeduccionXEmpleadoIndice, @OutResultCode OUTPUT
-					SET @IdDeduccionXEmpleadoIndice=@IdDeduccionXEmpleadoIndice+1;
+					SET @Cont=@Cont+1;
+					--SELECT AAA=@IdDeduccionXEmpleadoIndice, BBB=@IdDeduccionXEmpleadoTemp;
 				END
-
+				DROP TABLE #TempDXE
 				SET @IdSemanaXEmpleadoIndice=@IdSemanaXEmpleadoIndice+1;
 			END
 		END
