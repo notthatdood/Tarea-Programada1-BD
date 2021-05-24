@@ -69,11 +69,10 @@ CREATE PROCEDURE ListarMes
 	END
 GO
 
---EXECUTE ListarMes '8'
-/*Si se da click sobre el monto de deducciones se podrán ver el nombre de la deducción,
-el porcentaje aplicado (si es que es porcentual) y el monto de la deducción, para todas
-las deducciones aplicadas ese mes a ese empleado*/
-/*
+--EXECUTE ListarMes '7'
+
+---Recibe el Id de la PlanillaMensualXEmpleado, y devuelve el nombre de la deduccion, el valor(Si no
+--es porcentual será 0), si es porcentual y el monto que dedujo
 CREATE PROCEDURE ListarDeduccionesMes
 	@InIdPlanillaMensualXEmpleado INT
 
@@ -81,8 +80,12 @@ CREATE PROCEDURE ListarDeduccionesMes
 	BEGIN
 		SET NOCOUNT ON;
 		BEGIN TRY
-			SELECT TD.Nombre FROM TipoDeduccion TD, DeduccionXEmpleadoXMes DEM
-			WHERE DEM.IdTipoDeduccion=TD.Id AND DEM.IdPlanillaMensualXEmpleado=@InIdPlanillaMensualXEmpleado
+			SELECT
+				TD.Nombre, TD.Valor, TD.Porcentual, DEM.TotalDeducciones
+			FROM
+				TipoDeduccion TD, DeduccionXEmpleadoXMes DEM
+			WHERE
+				DEM.IdTipoDeduccion=TD.Id AND DEM.IdPlanillaMensualXEmpleado=@InIdPlanillaMensualXEmpleado
 		END TRY
 		BEGIN CATCH
 			INSERT INTO DBErrores VALUES (
@@ -100,6 +103,8 @@ CREATE PROCEDURE ListarDeduccionesMes
 		SET NOCOUNT OFF;
 	END
 GO
+
+--EXECUTE ListarDeduccionesMes '17'
 
 /*CREATE PROCEDURE name
 	@InPuestoId INT,
