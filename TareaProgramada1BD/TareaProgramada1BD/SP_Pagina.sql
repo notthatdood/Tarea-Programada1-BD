@@ -200,21 +200,18 @@ CREATE PROCEDURE ListarMes
 	BEGIN
 		SET NOCOUNT ON;
 		BEGIN TRY
-			DECLARE @TotalDeducciones INT;
-			SELECT
-				@TotalDeducciones=SUM(DEM.TotalDeducciones)
-			FROM
-				DeduccionXEmpleadoXMes DEM, PlanillaMensualXEmpleado PMXE
-			WHERE
-				DEM.IdPlanillaMensualXEmpleado=PMXE.Id AND PMXE.IdEmpleado=@InIdEmpleado;
-			
+			/*DECLARE @InIdEmpleado INT;
+			SET @InIdEmpleado=8*/
 
 			SELECT TOP 12
-				PMXE.Id, PMXE.IdMes, PMXE.SalarioTotal, PMXE.SalarioNeto, @TotalDeducciones AS TotalDeducciones
+				PMXE.Id, PMXE.IdMes, PMXE.SalarioNeto+SUM(DEM.TotalDeducciones) 'SalarioTotal', PMXE.SalarioNeto, SUM(DEM.TotalDeducciones) AS TotalDeducciones
 			FROM
-				PlanillaMensualXEmpleado PMXE, Empleado E
+				PlanillaMensualXEmpleado PMXE, Empleado E, DeduccionXEmpleadoXMes DEM
 			WHERE
-				PMXE.IdEmpleado=@InIdEmpleado AND E.Id=@InIdEmpleado AND E.Activo=1;
+				PMXE.IdEmpleado=@InIdEmpleado AND E.Id=@InIdEmpleado AND E.Activo=1 AND
+				DEM.IdPlanillaMensualXEmpleado=PMXE.Id
+			GROUP BY
+				PMXE.Id, PMXE.IdMes, PMXE.SalarioNeto;
 		END TRY
 		BEGIN CATCH
 			INSERT INTO DBErrores VALUES (
@@ -233,7 +230,7 @@ CREATE PROCEDURE ListarMes
 	END
 GO
 
---EXEC ListarDeduccionesMes'12'
+--EXEC ListarMes'8'
 --EXEC ListarDeduccionesSemana '8'
 
 CREATE PROCEDURE ListarDeduccionesSemana
