@@ -583,7 +583,7 @@ CREATE PROCEDURE CrearMovimientoCreditoDia
 		BEGIN
 			SET @EsFeriado=1;
 		END
-		ELSE IF(DATEPART(dw, @InFechaActual)=7)
+		ELSE IF(DATEPART(dw, @InFechaActual)=1)  --KEYLOR ELSE IF(DATEPART(dw, @InFechaActual)=7)
 		BEGIN
 			SET @EsFeriado=1;
 		END
@@ -764,6 +764,8 @@ CREATE PROCEDURE CrearMovimientoDebito
 				@InIdDeduccionXEmpleado=FNO.IdDeduccionXEmpleado;
 			SELECT @CantJueves=((DATEDIFF(day,PM.FechaInicio,PM.FechaFinal)+IIF(DATEPART(dw,PM.FechaInicio)>4,
 			DATEPART(dw,PM.FechaInicio)-4-7,DATEPART(dw,PM.FechaInicio)-4))/7)+1 
+			--KEYLOR SELECT @CantJueves=((DATEDIFF(day,PM.FechaInicio,PM.FechaFinal)+IIF(DATEPART(dw,PM.FechaInicio)>4,
+			--DATEPART(dw,PM.FechaInicio)-4-7,DATEPART(dw,PM.FechaInicio)-4))/7)+1 
 			FROM PlanillaMensual PM, PlanillaSemanal PS, PlanillaSemanalXEmpleado PSX
 			WHERE PM.Id=PS.IdMes AND PS.Id=PSX.IdSemana AND PSX.Id=@InIdSemanaXEmpleado;
 

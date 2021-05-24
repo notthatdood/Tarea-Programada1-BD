@@ -18,7 +18,7 @@ BEGIN
 
 	
 	--Este IF revisa si se trata o no de un viernes
-	IF(DATEPART(dw, @FechaActual)=5)
+	IF(DATEPART(dw, @FechaActual)=6)  --KEYLOR IF(DATEPART(dw, @FechaActual)=5)
 	BEGIN
 		---------------------Este segmento crea las PlanillaXEmpleado y genera los movimientos---------------
 		IF(DATEDIFF(day, DATEADD(d,1,EOMONTH(@FechaActual,-1)), @FechaActual)<=7)
@@ -102,7 +102,7 @@ BEGIN
 
 
 	--Este IF revisa si se trata o no de un jueves-----------------------------------------------------
-	IF(DATEPART(dw, @FechaActual)=4)
+	IF(DATEPART(dw, @FechaActual)=5) --KEYLOR IF(DATEPART(dw, @FechaActual)=4)
 	BEGIN
 		---------------------Este segmento crea los movimientos deduccion------------------------------
 		IF(@IdMesActual>0)
