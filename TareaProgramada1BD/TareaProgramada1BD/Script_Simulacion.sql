@@ -48,7 +48,7 @@ BEGIN
 	DECLARE
 		@Cont INT, @LargoTabla INT,
 		@InFechaEntrada DATETIME, @InFechaSalida DATETIME,
-		@InMarcaValorDocumentoIdentificacion INT, @IdMarcaAsistencia INT;
+		@InMarcaValorDocumentoIdentificacion INT, @IdMarcaAsistencia INT, @Auxiliar INT;
 	SELECT @Cont=1, @LargoTabla=COUNT(*) FROM #TempAsistencia
 	WHILE(@Cont<=@LargoTabla)
 	BEGIN
@@ -57,11 +57,16 @@ BEGIN
 			@InMarcaValorDocumentoIdentificacion=T.ValorDocumentoIdentidad
 		FROM #TempAsistencia T
 		WHERE T.Id=@Cont;
+		--SELECT @InFechaEntrada, @InFechaSalida;
 		EXECUTE MarcarAsistencia @InFechaEntrada, @InFechaSalida,
 		@InMarcaValorDocumentoIdentificacion, @IdMarcaAsistencia OUTPUT, @OutResultCode OUTPUT
 		--SELECT @OutResultCode;
 		EXECUTE CrearMovimientoCreditoDia @FechaActual, @IdSemanaActual, @InFechaEntrada, @InFechaSalida,
-		@InMarcaValorDocumentoIdentificacion, @IdMarcaAsistencia, @OutResultCode OUTPUT;
+		@InMarcaValorDocumentoIdentificacion, @IdMarcaAsistencia, @Auxiliar OUTPUT, @OutResultCode OUTPUT;
+		--SELECT @OutResultCode;
+		--SELECT @FechaActual, @IdSemanaActual, @InFechaEntrada, @InFechaSalida,
+		--@InMarcaValorDocumentoIdentificacion, @IdMarcaAsistencia
+		--SELECT AAA=@Auxiliar;
 		SET @Cont=@Cont+1;
 	END
 	DROP TABLE #TempAsistencia
@@ -99,15 +104,43 @@ BEGIN
 	--Este IF revisa si se trata o no de un jueves-----------------------------------------------------
 	IF(DATEPART(dw, @FechaActual)=4)
 	BEGIN
-		---------------------Este segmento crea las PlanillaXEmpleado y genera los movimientos---------------
-		/*IF(@IdMesActual>0)
+		---------------------Este segmento crea los movimientos deduccion------------------------------
+		IF(@IdMesActual>0)
 		BEGIN
+			--------Este segmento analiza los datos del mes si ha finalizado---------------------------
 			IF(DATEDIFF(day, DATEADD(d,1,EOMONTH(@FechaActual,-1)), @FechaActual)<=7)
 			BEGIN
-				EXECUTE InsertarMesXEmpleado @IdMesActual, @OutResultCode OUTPUT
-				--SELECT @OutResultCode
+				--EXECUTE InsertarMesXEmpleado @IdMesActual, @OutResultCode OUTPUT
+				SELECT @OutResultCode
 			END;
-		END*/
+			DECLARE @IdSemanaXEmpleadoTemp INT, @IdSemanaXEmpleadoIndice INT;
+			SELECT TOP 1 @IdSemanaXEmpleadoTemp=PSX.Id
+			FROM PlanillaSemanalXEmpleado PSX WHERE PSX.IdSemana=@IdSemanaActual ORDER BY PSX.Id DESC;
+			SELECT TOP 1 @IdSemanaXEmpleadoIndice=PSX.Id
+			FROM PlanillaSemanalXEmpleado PSX WHERE PSX.IdSemana=@IdSemanaActual ORDER BY PSX.Id ASC;
+			WHILE(@IdSemanaXEmpleadoIndice<=@IdSemanaXEmpleadoTemp)
+			BEGIN
+				DECLARE @IdDeduccionXEmpleadoTemp INT, @IdDeduccionXEmpleadoIndice INT;
+				SELECT TOP 1 @IdDeduccionXEmpleadoTemp=DXE.Id
+				FROM DeduccionXEmpleado DXE, PlanillaSemanalXEmpleado PSX
+				WHERE DXE.IdEmpleado=PSX.IdEmpleado AND PSX.Id=@IdSemanaXEmpleadoIndice
+				ORDER BY DXE.Id DESC;
+
+				SELECT TOP 1 @IdDeduccionXEmpleadoIndice=DXE.Id
+				FROM DeduccionXEmpleado DXE, PlanillaSemanalXEmpleado PSX
+				WHERE DXE.IdEmpleado=PSX.IdEmpleado AND PSX.Id=@IdSemanaXEmpleadoIndice
+				ORDER BY DXE.Id ASC;
+
+				WHILE(@IdDeduccionXEmpleadoIndice<=@IdDeduccionXEmpleadoTemp)
+				BEGIN
+					EXECUTE CrearMovimientoDebito @FechaActual, @IdSemanaXEmpleadoIndice,
+					@IdDeduccionXEmpleadoIndice, @OutResultCode OUTPUT
+					SET @IdDeduccionXEmpleadoIndice=@IdDeduccionXEmpleadoIndice+1;
+				END
+
+				SET @IdSemanaXEmpleadoIndice=@IdSemanaXEmpleadoIndice+1;
+			END
+		END
 
 
 ----------------------------Crea nuevo mes en caso de iniciar el mes----------------------------------
@@ -117,7 +150,7 @@ BEGIN
 			--SELECT @OutResultCode
 		END;
 		EXECUTE InsertarSemana @IdMesActual, @FechaActual, @IdSemanaActual OUTPUT, @OutResultCode OUTPUT
-		--SELECT @OutResultCode
+		--SELECT @IdSemanaActual
 
 
 		-----------------Segmento encargado de insertar empleados nuevos----------------------------------

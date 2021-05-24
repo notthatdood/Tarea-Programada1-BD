@@ -111,6 +111,26 @@ Cross apply CatalogoXML.nodes('Datos/Catalogos/Deducciones/TipoDeDeduccion') as 
 
 INSERT INTO PorcentualSiObligatoria SELECT TD.Id, TD.Valor
 FROM TipoDeduccion TD WHERE TD.Obligatorio=1;
+
+CREATE TABLE #Temp(Id INT IDENTITY(1,1) PRIMARY KEY, IdDeduccion INT,
+					    Obligatorio INT)
+INSERT INTO #Temp SELECT TD.Id, TD.Obligatorio FROM TipoDeduccion TD;
+DECLARE @Cont INT, @LargoTabla INT, @Aux BIT;
+SELECT @Cont=1, @LargoTabla=COUNT(*) FROM #Temp
+	WHILE(@Cont<=@LargoTabla)
+	BEGIN
+		SELECT @Aux=T.Obligatorio FROM #Temp T WHERE T.Id=@Cont;
+		IF(@Aux=1)
+		BEGIN
+			INSERT INTO TipoMovimientoDeduccion VALUES('4', @Cont)
+		END
+		ELSE
+		BEGIN
+			INSERT INTO TipoMovimientoDeduccion VALUES('5', @Cont)
+		END
+		SET @Cont=@Cont+1;
+	END
+DROP TABLE #Temp
 GO
 
 /*Create procedure insertarEmpleado as
