@@ -100,8 +100,7 @@ CREATE PROCEDURE ListarSemana
 					MP.TipoMovimiento=3 AND PSXE.IdSemana=@Cont;
 				IF(@TotalHorasExtraDobles IS NULL)
 				BEGIN
-					PRINT('aaaaa')
-					 SET @TotalHorasExtraDobles=0;
+					SET @TotalHorasExtraDobles=0;
 				END
 
 				--SELECT @TotalDeducciones, @TotalHorasNormales, @TotalHorasExtraNormales, @TotalHorasExtraDobles;
@@ -121,6 +120,48 @@ CREATE PROCEDURE ListarSemana
 			WHERE
 				PSM.IdEmpleado=@InIdEmpleado AND PSM.IdSemana=T.Id
 			DROP TABLE #Temp
+			
+		END TRY
+		BEGIN CATCH
+			INSERT INTO DBErrores VALUES (
+			SUSER_SNAME(),
+			ERROR_NUMBER(),
+			ERROR_STATE(),
+			ERROR_SEVERITY(),
+			ERROR_LINE(),
+			ERROR_PROCEDURE(),
+			ERROR_MESSAGE(),
+			GETDATE()
+			)
+		END CATCH
+		SET NOCOUNT OFF;
+	END
+GO
+
+--ListarSalarioSemana '8'
+
+CREATE PROCEDURE ListarSalarioSemana
+	@InIdPlanillaXEmpleado INT
+	AS
+	BEGIN
+		SET NOCOUNT ON;
+		BEGIN TRY
+			SELECT DATEPART(dw, CONVERT(DATE, MA.FechaEntrada)) 'Dia de la semana',
+			CONVERT(TIME, MA.FechaEntrada) 'Fecha de entrada',
+			CONVERT(TIME, MA.FechaSalida) 'Fecha de salida',
+			DATEDIFF(hh,TJ.HoraEntrada, TJ.HoraSalida) 'Horas Ordinarias',
+			DATEDIFF(hh,MA.FechaEntrada, MA.FechaSalida)-DATEDIFF(hh,TJ.HoraEntrada, TJ.HoraSalida) 'Horas Extra'
+			,SUM(MP.Monto)
+			FROM PlanillaSemanalXEmpleado PSE, Jornada J, TiposDeJornada TJ, MarcaAsistencia MA,
+			MovimientoHoras MH, MovimientoPlanilla MP
+			WHERE PSE.Id=@InIdPlanillaXEmpleado AND J.IdSemana=PSE.IdSemana
+			AND J.IdEmpleado=PSE.IdEmpleado AND/**/ J.TipoJornada=TJ.Id AND MA.IdJornada=J.Id
+			AND MH.IdMarcaAsistencia=MA.Id AND MH.Id=MP.Id
+			GROUP BY DATEPART(dw, CONVERT(DATE, MA.FechaEntrada)), CONVERT(TIME, MA.FechaEntrada),
+			CONVERT(TIME, MA.FechaSalida),
+			DATEDIFF(hh,TJ.HoraEntrada, TJ.HoraSalida),
+			DATEDIFF(hh,MA.FechaEntrada, MA.FechaSalida)-DATEDIFF(hh,TJ.HoraEntrada, TJ.HoraSalida);
+			
 			
 		END TRY
 		BEGIN CATCH
