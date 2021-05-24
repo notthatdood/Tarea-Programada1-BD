@@ -762,8 +762,8 @@ CREATE PROCEDURE CrearMovimientoDebito
 				FijaNoObligatoria FNO
 			WHERE
 				@InIdDeduccionXEmpleado=FNO.IdDeduccionXEmpleado;
-			SELECT @CantJueves=((DATEDIFF(day,PM.FechaInicio,PM.FechaFinal)+IIF(DATEPART(dw,PM.FechaInicio)>4,
-			DATEPART(dw,PM.FechaInicio)-4-7,DATEPART(dw,PM.FechaInicio)-4))/7)+1 
+			SELECT @CantJueves=((DATEDIFF(day,PM.FechaInicio,PM.FechaFinal)+IIF(DATEPART(dw,PM.FechaInicio)>5,
+			DATEPART(dw,PM.FechaInicio)-5-7,DATEPART(dw,PM.FechaInicio)-5))/7)+1 
 			--KEYLOR SELECT @CantJueves=((DATEDIFF(day,PM.FechaInicio,PM.FechaFinal)+IIF(DATEPART(dw,PM.FechaInicio)>4,
 			--DATEPART(dw,PM.FechaInicio)-4-7,DATEPART(dw,PM.FechaInicio)-4))/7)+1 
 			FROM PlanillaMensual PM, PlanillaSemanal PS, PlanillaSemanalXEmpleado PSX
