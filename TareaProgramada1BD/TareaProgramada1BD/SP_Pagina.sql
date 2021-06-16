@@ -1,7 +1,7 @@
 USE TareaProgramada
 GO
 
-CREATE PROCEDURE ListarUsuarios
+CREATE PROCEDURE dbo.ListarUsuarios
 
 	AS
 	BEGIN
@@ -29,7 +29,7 @@ GO
 
 --ListarUsuarios
 
-CREATE PROCEDURE ListarSemana
+CREATE PROCEDURE dbo.ListarSemana
 	@InIdEmpleado INT
 
 	AS
@@ -141,7 +141,7 @@ GO
 
 --ListarSalarioSemana '8'
 
-CREATE PROCEDURE ListarSalarioSemana
+CREATE PROCEDURE dbo.ListarSalarioSemana
 	@InIdPlanillaXEmpleado INT
 	AS
 	BEGIN
@@ -193,7 +193,7 @@ GO
 
 ---Recibe el Id del empleado, y devuelve los campos solicitados además del ID de
 --PlanillaMensualXEmpleado, este no se muestra, solo se necesita para consultar en ListarDeduccionesMes
-CREATE PROCEDURE ListarMes
+CREATE PROCEDURE dbo.ListarMes
 	@InIdEmpleado INT
 
 	AS
@@ -233,7 +233,7 @@ GO
 --EXEC ListarMes'8'
 --EXEC ListarDeduccionesSemana '8'
 
-CREATE PROCEDURE ListarDeduccionesSemana
+CREATE PROCEDURE dbo.ListarDeduccionesSemana
 	@InIdPlanillaXEmpleado INT
 
 	AS
@@ -272,7 +272,7 @@ GO
 
 ---Recibe el Id de la PlanillaMensualXEmpleado, y devuelve el nombre de la deduccion, el valor(Si no
 --es porcentual será 0), si es porcentual y el monto que dedujo
-CREATE PROCEDURE ListarDeduccionesMes
+CREATE PROCEDURE dbo.ListarDeduccionesMes
 	@InIdPlanillaMensualXEmpleado INT
 
 	AS

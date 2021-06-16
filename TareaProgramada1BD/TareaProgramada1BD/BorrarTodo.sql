@@ -29,5 +29,27 @@ BEGIN
 	Drop table PorcentualSiObligatoria;
 	Drop table FijaNoObligatoria;
 	Drop table Jornada;
+	DROP PROCEDURE AsociarEmpleadoConFijaNoObligatoria;
+	DROP PROCEDURE AsociarEmpleadoConMes;
+	DROP PROCEDURE AsociarEmpleadoConPorcentualNoObligatoria;
+	DROP PROCEDURE CrearMovimientoCreditoDia;
+	DROP PROCEDURE CrearMovimientoDebito;
+	DROP PROCEDURE DesasociarEmpleadoConDeduccion;
+	DROP PROCEDURE EliminarEmpleados;
+	DROP PROCEDURE insertarCatalogos;
+	DROP PROCEDURE InsertarEmpleados;
+	DROP PROCEDURE InsertarJornada;
+	DROP PROCEDURE InsertarMes;
+	DROP PROCEDURE InsertarMesXEmpleado;
+	DROP PROCEDURE InsertarSemana;
+	DROP PROCEDURE InsertarSemanaXEmpleado;
+	DROP PROCEDURE insertarUsuario;
+	DROP PROCEDURE ListarDeduccionesMes;
+	DROP PROCEDURE ListarDeduccionesSemana;
+	DROP PROCEDURE ListarMes;
+	DROP PROCEDURE ListarSalarioSemana;
+	DROP PROCEDURE ListarSemana;
+	DROP PROCEDURE ListarUsuarios;
+	DROP PROCEDURE MarcarAsistencia;
 	SET @i=@i+1;
 END

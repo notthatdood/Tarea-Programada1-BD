@@ -1,7 +1,7 @@
 Use TareaProgramada;
 Go
 
-CREATE PROCEDURE insertarCatalogos AS
+CREATE PROCEDURE dbo.InsertarCatalogos AS
 
 	INSERT INTO Puesto
 
@@ -160,7 +160,7 @@ Cross apply EmpleadosXML.nodes('Datos/Empleados/Empleado') as A(EmpleadoXML)
 
 GO*/
 
-CREATE PROCEDURE insertarUsuario AS
+CREATE PROCEDURE dbo.InsertarUsuario AS
 
 	INSERT INTO Usuario
 
@@ -180,6 +180,6 @@ CREATE PROCEDURE insertarUsuario AS
 
 GO
 
-EXECUTE insertarCatalogos
+EXECUTE InsertarCatalogos
 --Execute insertarEmpleado
-EXECUTE insertarUsuario
+EXECUTE InsertarUsuario

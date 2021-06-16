@@ -8,7 +8,39 @@ DECLARE @doc XML
 	FROM OPENROWSET(
 				BULK 'C:\Datos_Tarea2.xml', SINGLE_CLOB
 				) AS xmlData
-DECLARE @FechaActual DATE, @CantDias INT, @OutResultCode INT, @IdSemanaActual INT, @IdMesActual INT;
+DECLARE @FechaActual DATE
+	, @CantDias INT
+	, @OutResultCode INT
+	, @IdSemanaActual INT
+	, @IdMesActual INT
+	, @Cont INT
+	, @LargoTabla INT
+	, @InFechaEntrada DATETIME
+	, @InFechaSalida DATETIME
+	, @InMarcaValorDocumentoIdentificacion INT
+	, @IdMarcaAsistencia INT
+	, @Auxiliar INT
+	, @InEliminarValorDocumentoIdentificacion INT
+	, @IdSemanaXEmpleadoTemp INT
+	, @IdSemanaXEmpleadoIndice INT
+	, @IdDeduccionXEmpleadoIndice INT
+	, @InEmpleadoNombre VARCHAR(50)
+	, @InEmpleadoIdTipoIdentificacion INT
+	, @InEmpleadoValorDocumentoIdentificacion INT
+	, @InEmpleadoFechaNacimiento DATE
+	, @InEmpleadoIdPuesto INT
+	, @InEmpleadoIdDepartamento INT
+	, @InEmpleadoUsername VARCHAR(30)
+	, @InEmpleadoPwd VARCHAR(30)
+	, @InIdJornada INT
+	, @InJornadaValorDocumentoIdentificacion INT
+	, @InAsociaIdDeduccion INT
+	, @InAsociaMonto INT
+	, @InAsociaValorDocumentoIdentificacion INT
+	, @InDesIdDeduccion INT
+	, @InDesValorDocumentoIdentificacion INT;
+
+
 SET @FechaActual=@doc.value('(/Datos/Operacion/@Fecha)[1]','date')
 SET @CantDias=1;
 SET @IdMesActual=0;
@@ -18,7 +50,8 @@ BEGIN
 
 	
 	--Este IF revisa si se trata o no de un viernes
-	IF(DATEPART(dw, @FechaActual)=6)  --KEYLOR IF(DATEPART(dw, @FechaActual)=5)
+	--IF(DATEPART(dw, @FechaActual)=6) --ANDRES 
+	IF(DATEPART(dw, @FechaActual)=5) --KEYLOR
 	BEGIN
 		---------------------Este segmento crea las PlanillaXEmpleado y genera los movimientos---------------
 		IF(DATEDIFF(day, DATEADD(d,1,EOMONTH(@FechaActual,-1)), @FechaActual)<=7)
@@ -35,7 +68,9 @@ BEGIN
 				    FechaEntrada DATETIME,
 					FechaSalida DATETIME,
 					ValorDocumentoIdentidad INT)
-	INSERT INTO #TempAsistencia
+	INSERT INTO #TempAsistencia (FechaEntrada,
+								 FechaSalida,
+								 ValorDocumentoIdentidad)
 	SELECT
 		Marca.value('@FechaEntrada','datetime') AS FechaEntrada,
 		Marca.value('@FechaSalida','datetime') AS FechaSalida,
@@ -44,12 +79,12 @@ BEGIN
 		@doc.nodes('/Datos') AS A(Datos)
 	CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
 	CROSS APPLY B.Operacion.nodes('./MarcaDeAsistencia ') AS C(Marca)
-	WHERE Operacion.value('@Fecha', 'date')=@FechaActual
-	DECLARE
-		@Cont INT, @LargoTabla INT,
-		@InFechaEntrada DATETIME, @InFechaSalida DATETIME,
-		@InMarcaValorDocumentoIdentificacion INT, @IdMarcaAsistencia INT, @Auxiliar INT;
-	SELECT @Cont=1, @LargoTabla=COUNT(*) FROM #TempAsistencia
+	WHERE
+		Operacion.value('@Fecha', 'date')=@FechaActual
+	SELECT
+		@Cont=1, @LargoTabla=COUNT(*)
+	FROM
+		#TempAsistencia
 	WHILE(@Cont<=@LargoTabla)
 	BEGIN
 		SELECT 
@@ -76,7 +111,7 @@ BEGIN
 	-----------------Segmento encargado de eliminar empleados----------------------------------
 	CREATE TABLE #TempEliminar(Id INT IDENTITY(1,1) PRIMARY KEY,
 				    ValorDocumentoIdentidad INT)
-	INSERT INTO #TempEliminar
+	INSERT INTO #TempEliminar(ValorDocumentoIdentidad)
 	SELECT
 		Eliminar.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentidad
 	FROM 
@@ -84,8 +119,6 @@ BEGIN
 	CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
 	CROSS APPLY B.Operacion.nodes('./EliminarEmpleado  ') AS C(Eliminar)
 	WHERE Operacion.value('@Fecha', 'date')=@FechaActual
-	DECLARE
-		@InEliminarValorDocumentoIdentificacion INT;
 	SELECT @Cont=1, @LargoTabla=COUNT(*) FROM #TempEliminar
 	WHILE(@Cont<=@LargoTabla)
 	BEGIN
@@ -102,7 +135,8 @@ BEGIN
 
 
 	--Este IF revisa si se trata o no de un jueves-----------------------------------------------------
-	IF(DATEPART(dw, @FechaActual)=5) --KEYLOR IF(DATEPART(dw, @FechaActual)=4)
+	--IF(DATEPART(dw, @FechaActual)=5)--ANDRES
+	IF(DATEPART(dw, @FechaActual)=4)--KEYLOR
 	BEGIN
 		---------------------Este segmento crea los movimientos deduccion------------------------------
 		IF(@IdMesActual>0)
@@ -113,11 +147,12 @@ BEGIN
 				--EXECUTE InsertarMesXEmpleado @IdMesActual, @OutResultCode OUTPUT
 				SELECT @OutResultCode
 			END;
-			DECLARE @IdSemanaXEmpleadoTemp INT, @IdSemanaXEmpleadoIndice INT;
 			SELECT TOP 1 @IdSemanaXEmpleadoTemp=PSX.Id
-			FROM PlanillaSemanalXEmpleado PSX WHERE PSX.IdSemana=@IdSemanaActual ORDER BY PSX.Id DESC;
+			FROM
+				PlanillaSemanalXEmpleado PSX WHERE PSX.IdSemana=@IdSemanaActual ORDER BY PSX.Id DESC;
 			SELECT TOP 1 @IdSemanaXEmpleadoIndice=PSX.Id
-			FROM PlanillaSemanalXEmpleado PSX WHERE PSX.IdSemana=@IdSemanaActual ORDER BY PSX.Id ASC;
+			FROM
+				PlanillaSemanalXEmpleado PSX WHERE PSX.IdSemana=@IdSemanaActual ORDER BY PSX.Id ASC;
 			WHILE(@IdSemanaXEmpleadoIndice<=@IdSemanaXEmpleadoTemp)
 			BEGIN
 				/*DECLARE @IdDeduccionXEmpleadoTemp INT, @IdDeduccionXEmpleadoIndice INT;
@@ -134,14 +169,25 @@ BEGIN
 						IdDXE INT,
 						IdEmpleado INT,
 						IdTipoDeduccion INT,)
-				INSERT INTO #TempDXE SELECT DXE.Id, DXE.IdEmpleado, DXE.IdTipoDeduccion
-				FROM DeduccionXEmpleado DXE, PlanillaSemanalXEmpleado PSX
-				WHERE DXE.IdEmpleado=PSX.IdEmpleado AND PSX.Id=@IdSemanaXEmpleadoIndice;
-				SELECT @Cont=1, @LargoTabla=COUNT(*) FROM #TempDXE
+				INSERT INTO #TempDXE(IdDXE,
+									 IdEmpleado,
+									 IdTipoDeduccion)
+				SELECT
+					DXE.Id, DXE.IdEmpleado, DXE.IdTipoDeduccion
+				FROM
+					DeduccionXEmpleado DXE, PlanillaSemanalXEmpleado PSX
+				WHERE
+					DXE.IdEmpleado=PSX.IdEmpleado AND PSX.Id=@IdSemanaXEmpleadoIndice;
+				SELECT
+					@Cont=1, @LargoTabla=COUNT(*) FROM #TempDXE
 				WHILE(@Cont<=@LargoTabla)
 				BEGIN
-					DECLARE @IdDeduccionXEmpleadoIndice INT;
-					SELECT @IdDeduccionXEmpleadoIndice=T.IdDXE FROM #TempDXE T WHERE T.Id=@Cont;
+					SELECT
+						@IdDeduccionXEmpleadoIndice=T.IdDXE
+					FROM
+						#TempDXE T
+					WHERE
+						T.Id=@Cont;
 					EXECUTE CrearMovimientoDebito @FechaActual, @IdSemanaXEmpleadoIndice,
 					@IdDeduccionXEmpleadoIndice, @OutResultCode OUTPUT
 					SET @Cont=@Cont+1;
@@ -164,13 +210,23 @@ BEGIN
 
 
 		-----------------Segmento encargado de insertar empleados nuevos----------------------------------
-		CREATE TABLE #TempEmpleados(Id INT IDENTITY(1,1) PRIMARY KEY, Nombre VARCHAR(50),
+		CREATE TABLE #TempEmpleados(Id INT IDENTITY(1,1) PRIMARY KEY,
+						Nombre VARCHAR(50),
 					    IdTipoIdentificacion INT,
 						ValorDocumentoIdentificacion INT, 
-						IdDepartamento INT, IdPuesto INT,
-						FechaNacimiento DATE, Username VARCHAR(30),
+						IdDepartamento INT,
+						IdPuesto INT,
+						FechaNacimiento DATE,
+						Username VARCHAR(30),
 						Pwd VARCHAR(30))
-		INSERT INTO #TempEmpleados
+		INSERT INTO #TempEmpleados(Nombre,
+								   IdTipoIdentificacion,
+								   ValorDocumentoIdentificacion,
+								   IdDepartamento,
+								   IdPuesto,
+								   FechaNacimiento,
+								   Username,
+								   Pwd)
 		SELECT
 			NuevoEmpleado.value('@Nombre','varchar(50)') AS Nombre,
 			NuevoEmpleado.value('@idTipoDocumentacionIdentidad','int') AS IdTipoIdentificacion,
@@ -185,11 +241,6 @@ BEGIN
 		CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
 		CROSS APPLY B.Operacion.nodes('./NuevoEmpleado') AS C(NuevoEmpleado)
 		WHERE Operacion.value('@Fecha', 'date')=@FechaActual
-		DECLARE
-			@InEmpleadoNombre VARCHAR(50), @InEmpleadoIdTipoIdentificacion INT,
-			@InEmpleadoValorDocumentoIdentificacion INT, @InEmpleadoFechaNacimiento DATE,
-			@InEmpleadoIdPuesto INT, @InEmpleadoIdDepartamento INT, @InEmpleadoUsername VARCHAR(30),
-			@InEmpleadoPwd VARCHAR(30);
 		SELECT @Cont=1, @LargoTabla=COUNT(*) FROM #TempEmpleados
 		WHILE(@Cont<=@LargoTabla)
 		BEGIN
@@ -219,7 +270,8 @@ BEGIN
 		CREATE TABLE #TempJornada(Id INT IDENTITY(1,1) PRIMARY KEY,
 					    IdJornada INT,
 						ValorDocumentoIdentificacion INT)
-		INSERT INTO #TempJornada
+		INSERT INTO #TempJornada(IdJornada,
+								 ValorDocumentoIdentificacion)
 		SELECT
 			Jornada.value('@IdJornada','int') AS IdJornada,
 			Jornada.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentificacion
@@ -227,20 +279,24 @@ BEGIN
 			@doc.nodes('/Datos') AS A(Datos)
 		CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
 		CROSS APPLY B.Operacion.nodes('./TipoDeJornadaProximaSemana') AS C(Jornada)
-		WHERE Operacion.value('@Fecha', 'date')=@FechaActual
-		DECLARE
-			@InIdJornada INT,
-			@InJornadaValorDocumentoIdentificacion INT;
-		SELECT @Cont=1, @LargoTabla=COUNT(*) FROM #TempJornada
+		WHERE
+			Operacion.value('@Fecha', 'date')=@FechaActual
+		SELECT
+			@Cont=1, @LargoTabla=COUNT(*)
+		FROM
+			#TempJornada
 		WHILE(@Cont<=@LargoTabla)
 		BEGIN
 			SELECT 
 				@InIdJornada=T.IdJornada,
 				@InJornadaValorDocumentoIdentificacion=T.ValorDocumentoIdentificacion
-			FROM #TempJornada T
-			WHERE T.Id=@Cont;
-			EXECUTE InsertarJornada @InIdJornada, @InJornadaValorDocumentoIdentificacion,
-			@IdSemanaActual, @OutResultCode OUTPUT
+			FROM
+				#TempJornada T
+			WHERE
+				T.Id=@Cont;
+			EXECUTE
+				InsertarJornada @InIdJornada, @InJornadaValorDocumentoIdentificacion,
+				@IdSemanaActual, @OutResultCode OUTPUT
 			--SELECT @OutResultCode;
 			SET @Cont=@Cont+1;
 		END
@@ -256,7 +312,9 @@ BEGIN
 				    IdDeduccion INT,
 					Monto INT,
 					ValorDocumentoIdentidad INT)
-	INSERT INTO #TempAsocia
+	INSERT INTO #TempAsocia(IdDeduccion,
+							Monto,
+							ValorDocumentoIdentidad)
 	SELECT
 		Asocia.value('@IdDeduccion','int') AS IdDeduccion,
 		CASE WHEN
@@ -269,20 +327,23 @@ BEGIN
 		@doc.nodes('/Datos') AS A(Datos)
 	CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
 	CROSS APPLY B.Operacion.nodes('./AsociaEmpleadoConDeduccion  ') AS C(Asocia)
-	WHERE Operacion.value('@Fecha', 'date')=@FechaActual
+	WHERE
+		Operacion.value('@Fecha', 'date')=@FechaActual
 	--SELECT @FechaActual;
 	--SELECT * FROM #TempAsocia;
-	DECLARE
-		@InAsociaIdDeduccion INT, @InAsociaMonto INT,
-		@InAsociaValorDocumentoIdentificacion INT;
-	SELECT @Cont=1, @LargoTabla=COUNT(*) FROM #TempAsocia
+	SELECT
+		@Cont=1, @LargoTabla=COUNT(*)
+	FROM
+		#TempAsocia
 	WHILE(@Cont<=@LargoTabla)
 	BEGIN
 		SELECT 
 			@InAsociaIdDeduccion=T.IdDeduccion, @InAsociaMonto=T.Monto,
 			@InAsociaValorDocumentoIdentificacion=T.ValorDocumentoIdentidad
-		FROM #TempAsocia T
-		WHERE T.Id=@Cont;
+		FROM
+			#TempAsocia T
+		WHERE
+			T.Id=@Cont;
 		IF(@InAsociaMonto=0)
 		BEGIN
 			EXECUTE AsociarEmpleadoConPorcentualNoObligatoria @InAsociaIdDeduccion,
@@ -306,7 +367,8 @@ BEGIN
 	CREATE TABLE #TempDeasocia(Id INT IDENTITY(1,1) PRIMARY KEY,
 				    IdDeduccion INT,
 					ValorDocumentoIdentidad INT)
-	INSERT INTO #TempDeasocia
+	INSERT INTO #TempDeasocia(IdDeduccion,
+							  ValorDocumentoIdentidad)
 	SELECT
 		Deasocia.value('@IdDeduccion','int') AS IdDeduccion,
 		Deasocia.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentidad
@@ -314,17 +376,21 @@ BEGIN
 		@doc.nodes('/Datos') AS A(Datos)
 	CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
 	CROSS APPLY B.Operacion.nodes('./DesasociaEmpleadoConDeduccion  ') AS C(Deasocia)
-	WHERE Operacion.value('@Fecha', 'date')=@FechaActual
-	DECLARE
-		@InDesIdDeduccion int, @InDesValorDocumentoIdentificacion INT;
-	SELECT @Cont=1, @LargoTabla=COUNT(*) FROM #TempDeasocia
+	WHERE
+		Operacion.value('@Fecha', 'date')=@FechaActual
+	SELECT
+		@Cont=1, @LargoTabla=COUNT(*)
+	FROM
+		#TempDeasocia
 	WHILE(@Cont<=@LargoTabla)
 	BEGIN
 		SELECT 
 			@InDesIdDeduccion=T.IdDeduccion,
 			@InDesValorDocumentoIdentificacion=T.ValorDocumentoIdentidad
-		FROM #TempDeasocia T
-		WHERE T.Id=@Cont;
+		FROM
+			#TempDeasocia T
+		WHERE
+			T.Id=@Cont;
 		EXECUTE DesasociarEmpleadoConDeduccion @InDesIdDeduccion,
 		@InDesValorDocumentoIdentificacion, @OutResultCode OUTPUT
 		--SELECT @OutResultCode;

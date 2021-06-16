@@ -1,20 +1,24 @@
 USE TareaProgramada;
 GO
 
-CREATE TRIGGER AsociarConDeduccion ON Empleado
+CREATE TRIGGER dbo.AsociarConDeduccion ON Empleado
 AFTER INSERT
 	AS
 	DECLARE @IdEmpleado INT=(SELECT Id FROM inserted)
 	BEGIN
 		SET NOCOUNT ON;
 		BEGIN TRY
-			INSERT INTO DeduccionXEmpleado
+			INSERT INTO DeduccionXEmpleado(IdEmpleado,
+										   IdTipoDeduccion)
 			SELECT
-				E.Id, TD.Id
+				E.Id,
+				TD.Id
 			FROM
-				Empleado E, TipoDeduccion TD
+				Empleado E,
+				TipoDeduccion TD
 			WHERE
-				TD.Obligatorio='1' AND E.Id=@IdEmpleado;
+				TD.Obligatorio='1' AND
+				E.Id=@IdEmpleado;
 		END TRY
 		BEGIN CATCH
 			INSERT INTO DBErrores VALUES (
