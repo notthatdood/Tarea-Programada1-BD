@@ -15,7 +15,7 @@ CREATE PROCEDURE dbo.InsertarCatalogos AS
 	FROM
 		(
 		SELECT cast(CatalogoXML AS xml) FROM
-		OPENROWSET(BULK 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
+		OPENROWSET(BULK 'C:\Datos_Tarea3.xml', Single_Blob) T(CatalogoXML)
 		) AS S(CatalogoXML)
 
 	CROSS APPLY CatalogoXML.nodes('Datos/Catalogos/Puestos/Puesto') AS A(CatalogoXML)
@@ -29,7 +29,7 @@ CREATE PROCEDURE dbo.InsertarCatalogos AS
 	FROM
 		(
 		SELECT cast(CatalogoXML AS xml) FROM
-		OPENROWSET(BULK 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
+		OPENROWSET(BULK 'C:\Datos_Tarea3.xml', Single_Blob) T(CatalogoXML)
 		) AS S(CatalogoXML)
 
 	CROSS APPLY CatalogoXML.nodes('Datos/Catalogos/Tipos_de_Documento_de_Identificacion/TipoIdDoc') as A(CatalogoXML)
@@ -43,7 +43,7 @@ CREATE PROCEDURE dbo.InsertarCatalogos AS
 	FROM
 		(
 		SELECT cast(CatalogoXML AS xml) FROM
-		OPENROWSET(BULK 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
+		OPENROWSET(BULK 'C:\Datos_Tarea3.xml', Single_Blob) T(CatalogoXML)
 		) AS S(CatalogoXML)
 
 	CROSS APPLY CatalogoXML.nodes('Datos/Catalogos/Departamentos/Departamento') as A(CatalogoXML)
@@ -59,7 +59,7 @@ CREATE PROCEDURE dbo.InsertarCatalogos AS
 	FROM
 		(
 		SELECT cast(CatalogoXML AS xml) FROM
-		OPENROWSET(BULK 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
+		OPENROWSET(BULK 'C:\Datos_Tarea3.xml', Single_Blob) T(CatalogoXML)
 		) AS S(CatalogoXML)
 
 	CROSS APPLY CatalogoXML.nodes('Datos/Catalogos/TiposDeJornada/TipoDeJornada') as A(CatalogoXML)
@@ -73,7 +73,7 @@ CREATE PROCEDURE dbo.InsertarCatalogos AS
 	FROM
 		(
 		SELECT cast(CatalogoXML AS xml) FROM
-		OPENROWSET(BULK 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
+		OPENROWSET(BULK 'C:\Datos_Tarea3.xml', Single_Blob) T(CatalogoXML)
 		) AS S(CatalogoXML)
 
 	CROSS APPLY CatalogoXML.nodes('Datos/Catalogos/TiposDeMovimiento/TipoDeMovimiento') as A(CatalogoXML)
@@ -87,7 +87,7 @@ CREATE PROCEDURE dbo.InsertarCatalogos AS
 	FROM
 		(
 		SELECT cast(CatalogoXML AS xml) FROM
-		OPENROWSET(BULK 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
+		OPENROWSET(BULK 'C:\Datos_Tarea3.xml', Single_Blob) T(CatalogoXML)
 		) AS S(CatalogoXML)
 
 	CROSS APPLY CatalogoXML.nodes('Datos/Catalogos/Feriados/Feriado') as A(CatalogoXML)
@@ -106,7 +106,7 @@ CREATE PROCEDURE dbo.InsertarCatalogos AS
 	FROM
 		(
 		SELECT cast(CatalogoXML AS xml) FROM
-		OPENROWSET(BULK 'C:\Datos_Tarea2.xml', Single_Blob) T(CatalogoXML)
+		OPENROWSET(BULK 'C:\Datos_Tarea3.xml', Single_Blob) T(CatalogoXML)
 		) AS S(CatalogoXML)
 
 	CROSS APPLY CatalogoXML.nodes('Datos/Catalogos/Deducciones/TipoDeDeduccion') as A(CatalogoXML)
@@ -153,7 +153,7 @@ A.EmpleadoXML.value('@FechaNacimiento','date') as FechaNacimiento,
 From
 (
 Select cast(EmpleadosXML as xml) from
-Openrowset(Bulk 'C:\Datos_Tarea2.xml', Single_Blob) T(EmpleadosXML)
+Openrowset(Bulk 'C:\Datos_Tarea3.xml', Single_Blob) T(EmpleadosXML)
 ) as S(EmpleadosXML)
 
 Cross apply EmpleadosXML.nodes('Datos/Empleados/Empleado') as A(EmpleadoXML)
@@ -173,7 +173,7 @@ CREATE PROCEDURE dbo.InsertarUsuario AS
 	FROM
 		(
 		SELECT cast(UsuariosXML AS xml) FROM
-		OPENROWSET(BULK 'C:\Datos_Tarea2.xml', Single_Blob) T(UsuariosXML)
+		OPENROWSET(BULK 'C:\Datos_Tarea3.xml', Single_Blob) T(UsuariosXML)
 		) AS S(UsuariosXML)
 
 	CROSS APPLY UsuariosXML.nodes('Datos/Usuarios/Usuario') as A(UsuarioXML)

@@ -123,7 +123,7 @@ CREATE TABLE MovimientoHoras ( Id INT PRIMARY KEY, IdMarcaAsistencia INT,
 GO
 
 CREATE TABLE DeduccionXEmpleado ( Id INT IDENTITY(1,1) PRIMARY KEY,
-						IdEmpleado INT, IdTipoDeduccion INT,
+						IdEmpleado INT, IdTipoDeduccion INT, Activo BIT,
 						FOREIGN KEY (IdEmpleado) REFERENCES Empleado (Id),
 						FOREIGN KEY (IdTipoDeduccion) REFERENCES TipoDeduccion (Id))
 GO

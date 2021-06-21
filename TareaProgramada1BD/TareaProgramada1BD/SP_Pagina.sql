@@ -206,7 +206,8 @@ CREATE PROCEDURE dbo.ListarMes
 			SELECT TOP 12
 				PMXE.Id, PMXE.IdMes, PMXE.SalarioNeto+SUM(DEM.TotalDeducciones) 'SalarioTotal', PMXE.SalarioNeto, SUM(DEM.TotalDeducciones) AS TotalDeducciones
 			FROM
-				PlanillaMensualXEmpleado PMXE, Empleado E, DeduccionXEmpleadoXMes DEM
+				PlanillaMensualXEmpleado PMXE,
+				Empleado E, DeduccionXEmpleadoXMes DEM
 			WHERE
 				PMXE.IdEmpleado=@InIdEmpleado AND E.Id=@InIdEmpleado AND E.Activo=1 AND
 				DEM.IdPlanillaMensualXEmpleado=PMXE.Id

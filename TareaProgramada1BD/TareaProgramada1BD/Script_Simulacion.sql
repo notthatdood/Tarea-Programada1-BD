@@ -6,7 +6,7 @@ GO
 DECLARE @doc XML
 	SELECT @doc=BulkColumn
 	FROM OPENROWSET(
-				BULK 'C:\Datos_Tarea2.xml', SINGLE_CLOB
+				BULK 'C:\Datos_Tarea3.xml', SINGLE_CLOB
 				) AS xmlData
 DECLARE @FechaActual DATE
 	, @CantDias INT
@@ -40,6 +40,10 @@ DECLARE @FechaActual DATE
 	, @InDesIdDeduccion INT
 	, @InDesValorDocumentoIdentificacion INT
 	,@EsFeriado BIT
+	,@IdSXECont INT
+
+	,@FechaItera INT
+	,@FechaFinal INT
 	---Variables para crédito día
 	,@IdSemanaXEmpleado INT
 	,@Monto INT
@@ -47,14 +51,66 @@ DECLARE @FechaActual DATE
 	,@HorasEsperadas INT
 	,@IdMovimiento INT
 	,@IdE INT
-	,@IdMes INT;
+	,@IdMes INT
+	---Variables par insertar mes
+	,@InFechaFinal DATE
+	,@InFechaTemporal DATE
+	,@Bandera BIT;
 
+	--SELECT @FechaItera=Min(FechaOperacion), @FechaFinal=max(FechaOperacion) FROM @doc.nodes('/FechaOperacion');
+	SELECT
+		@FechaFinal= COUNT(Operacion.value('@Fecha','datetime'))
+	FROM 
+		@doc.nodes('/Datos') AS A(Datos)
+	CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
+	--Select @FechaFinal
 
+		--SELECT @FechaItera=@doc.value('(/Datos/Operacion/@Fecha)[1]','date')
+		--SELECT @FechaItera
 SET @FechaActual=@doc.value('(/Datos/Operacion/@Fecha)[1]','date')
 SET @CantDias=1;
 SET @IdMesActual=0;
 SET NOCOUNT ON;
-WHILE(@CantDias<=92) --92
+WHILE(@CantDias<@FechaFinal)
+BEGIN
+	IF(DATEPART(dw, @FechaActual)=4)--KEYLOR
+	BEGIN----------------Crea nuevo mes en caso de iniciar el mes----------------------------------
+		IF(DATEDIFF(day, DATEADD(d,1,EOMONTH(@FechaActual,-1)), @FechaActual)<=7)
+		BEGIN
+			--SET @FechaActual=DATEADD(DAY,1,@FechaActual);
+			SELECT
+				@InFechaFinal=DATEADD(DAY,8,@FechaActual), 
+				@InFechaTemporal=EOMONTH(@InFechaFinal),
+				@Bandera='0';
+			WHILE(@Bandera='0') BEGIN
+			--PRINT(@FechaFinal)
+				IF(@InFechaFinal>@InFechaTemporal) BEGIN
+					SELECT
+						@InFechaFinal=DATEADD(DAY,-1,@InFechaFinal),
+						@Bandera='1';
+				END
+				IF(@Bandera='0') BEGIN
+					SELECT
+						@InFechaFinal=DATEADD(DAY,7,@InFechaFinal);
+				END
+			END
+			EXECUTE InsertarMes @FechaActual,---AKASA
+								@InFechaFinal,
+								@IdMesActual OUTPUT,
+								@OutResultCode OUTPUT
+			--SELECT @OutResultCode
+		END;
+		EXECUTE InsertarSemana @IdMesActual, @FechaActual, @IdSemanaActual OUTPUT, @OutResultCode OUTPUT
+	END;
+	SET @FechaActual=DATEADD(DAY,1,@FechaActual)
+	SET @CantDias=@CantDias+1;
+END
+
+SET @FechaActual=@doc.value('(/Datos/Operacion/@Fecha)[1]','date')
+SET @CantDias=1;
+SET @IdMesActual=0;
+SET @IdSemanaActual=0;
+WHILE(@CantDias<=@FechaFinal) --92
 BEGIN
 	--Busca si el día es feriado/domingo
 	IF EXISTS(SELECT F.Fecha FROM Feriados F WHERE @FechaActual=F.Fecha)
@@ -74,18 +130,19 @@ BEGIN
 
 	--Este IF revisa si se trata o no de un viernes
 	--IF(DATEPART(dw, @FechaActual)=6) --ANDRES 
-	IF(DATEPART(dw, @FechaActual)=5) --KEYLOR
+	/*IF(DATEPART(dw, @FechaActual)=5) --KEYLOR
 	BEGIN
 		---------------------Este segmento crea las PlanillaXEmpleado y genera los movimientos---------------
 		IF(DATEDIFF(day, DATEADD(d,1,EOMONTH(@FechaActual,-1)), @FechaActual)<=7)
 		BEGIN
+
 			EXECUTE InsertarMesXEmpleado @IdMesActual,
 										 @OutResultCode OUTPUT
 			--SELECT @OutResultCode
 		END;
 		EXECUTE InsertarSemanaXEmpleado @IdSemanaActual,
 										@OutResultCode OUTPUT
-	END
+	END*/
 
 
 	-----------------Segmento encargado de marcar la asistencia----------------------------------
@@ -127,6 +184,7 @@ BEGIN
 								 @InMarcaValorDocumentoIdentificacion,
 								 @IdMarcaAsistencia OUTPUT,
 								 @OutResultCode OUTPUT
+		Print('Marcar asistencia')
 		--SELECT @OutResultCode;
 		--Pre-procensando datos necesarios para los creditos día--------------------------
 		SELECT
@@ -177,16 +235,20 @@ BEGIN
 										  @IdMes,
 										  --@Auxiliar OUTPUT,
 										  @OutResultCode OUTPUT;
-
+		Print('Credito')
 		SELECT @IdMes=PM.Id
 		FROM
 			dbo.PlanillaMensual PM, 
 			dbo.PlanillaSemanal PS, 
 			dbo.PlanillaSemanalXEmpleado PSX
 		WHERE
-			PM.Id=PS.IdMes AND PS.Id=PSX.IdSemana AND PSX.Id=@IdSemanaXEmpleado;
+			PM.Id=PS.IdMes AND
+			PS.Id=PSX.IdSemana AND
+			PSX.Id=@IdSemanaXEmpleado;
 		SELECT
-			@Monto=PSX.SalarioNeto FROM PlanillaSemanalXEmpleado PSX
+			@Monto=PSX.SalarioNeto
+		FROM
+			PlanillaSemanalXEmpleado PSX
 		WHERE
 			PSX.Id=@IdSemanaXEmpleado;
 		SELECT
@@ -200,6 +262,7 @@ BEGIN
 										  @IdE,
 										  @IdMes,
 										  @OutResultCode OUTPUT;
+		Print('Salario')
 		--SELECT @OutResultCode;
 		--SELECT @FechaActual, @IdSemanaActual, @InFechaEntrada, @InFechaSalida,
 		--@InMarcaValorDocumentoIdentificacion, @IdMarcaAsistencia
@@ -235,6 +298,7 @@ BEGIN
 		WHERE
 			T.Id=@Cont;
 		EXECUTE EliminarEmpleados @InEliminarValorDocumentoIdentificacion, @OutResultCode OUTPUT
+		Print('Eliminar empleados')
 		--SELECT @OutResultCode;
 		SET @Cont=@Cont+1;
 	END
@@ -250,28 +314,28 @@ BEGIN
 		IF(@IdMesActual>0)
 		BEGIN
 			--------Este segmento analiza los datos del mes si ha finalizado---------------------------
-			IF(DATEDIFF(day, DATEADD(d,1,EOMONTH(@FechaActual,-1)), @FechaActual)<=7)
+			/*IF(DATEDIFF(day, DATEADD(d,1,EOMONTH(@FechaActual,-1)), @FechaActual)<=7)
 			BEGIN
 				--EXECUTE InsertarMesXEmpleado @IdMesActual, @OutResultCode OUTPUT
 				SELECT @OutResultCode
-			END;
-			SELECT TOP 1
-				@IdSemanaXEmpleadoTemp=PSX.Id
+			END;*/
+			CREATE TABLE #TempSXE(Id INT IDENTITY(1,1) PRIMARY KEY,
+							  IdSemanaXEmpleado INT)
+			INSERT INTO #TempSXE(IdSemanaXEmpleado)
+			SELECT
+				PSX.Id AS IdSemanaXEmpleado
 			FROM
 				dbo.PlanillaSemanalXEmpleado PSX
 			WHERE
 				PSX.IdSemana=@IdSemanaActual
-			ORDER BY
-				PSX.Id DESC;
-			SELECT TOP 1
-				@IdSemanaXEmpleadoIndice=PSX.Id
+
+			SELECT
+				@IdSXECont=1,
+				@IdSemanaXEmpleadoTemp=Count(#TempSXE.IdSemanaXEmpleado)
 			FROM
-				dbo.PlanillaSemanalXEmpleado PSX
-			WHERE
-				PSX.IdSemana=@IdSemanaActual
-			ORDER BY
-				PSX.Id ASC;
-			WHILE(@IdSemanaXEmpleadoIndice<=@IdSemanaXEmpleadoTemp)
+				#TempSXE;
+
+			WHILE(@IdSXECont<=@IdSemanaXEmpleadoTemp)
 			BEGIN
 				/*DECLARE @IdDeduccionXEmpleadoTemp INT, @IdDeduccionXEmpleadoIndice INT;
 				SELECT TOP 1 @IdDeduccionXEmpleadoTemp=DXE.Id
@@ -299,12 +363,21 @@ BEGIN
 					PlanillaSemanalXEmpleado PSX
 				WHERE
 					DXE.IdEmpleado=PSX.IdEmpleado AND
-					PSX.Id=@IdSemanaXEmpleadoIndice;
+					PSX.Id=@IdSemanaXEmpleadoIndice AND
+					DXE.Activo='1';
 				SELECT
 					@Cont=1,
 					@LargoTabla=COUNT(*)
 				FROM
 					#TempDXE
+
+				SELECT
+					@IdSemanaXEmpleadoIndice=TSXE.IdSemanaXEmpleado
+				FROM
+					#TempSXE TSXE
+				WHERE
+					TSXE.Id=@IdSXECont;
+
 				WHILE(@Cont<=@LargoTabla)
 				BEGIN
 					SELECT
@@ -313,24 +386,31 @@ BEGIN
 						#TempDXE T
 					WHERE
 						T.Id=@Cont;
-					EXECUTE CrearMovimientoDebito @FechaActual, @IdSemanaXEmpleadoIndice,
-					@IdDeduccionXEmpleadoIndice, @OutResultCode OUTPUT
+					EXECUTE CrearMovimientoDebito @FechaActual,
+												  @IdSemanaXEmpleadoIndice,
+												  @IdDeduccionXEmpleadoIndice,
+												  @OutResultCode OUTPUT
+					Print('Debito')
 					SET @Cont=@Cont+1;
 					--SELECT AAA=@IdDeduccionXEmpleadoIndice, BBB=@IdDeduccionXEmpleadoTemp;
 				END
 				DROP TABLE #TempDXE
-				SET @IdSemanaXEmpleadoIndice=@IdSemanaXEmpleadoIndice+1;
+				SET @IdSXECont=@IdSXECont+1;
 			END
+			DROP TABLE #TempSXE;
 		END
-
+		IF(@IdMesActual=0)
+		BEGIN
+			SET @IdMesActual=1;
+		END
 
 ----------------------------Crea nuevo mes en caso de iniciar el mes----------------------------------
 		IF(DATEDIFF(day, DATEADD(d,1,EOMONTH(@FechaActual,-1)), @FechaActual)<=7)
 		BEGIN
-			EXECUTE InsertarMes @FechaActual, @IdMesActual OUTPUT, @OutResultCode OUTPUT
+			SET @IdMesActual=@IdMesActual+1;
 			--SELECT @OutResultCode
 		END;
-		EXECUTE InsertarSemana @IdMesActual, @FechaActual, @IdSemanaActual OUTPUT, @OutResultCode OUTPUT
+		SET @IdSemanaActual=@IdSemanaActual+1;
 		--SELECT @IdSemanaActual
 
 
@@ -387,6 +467,7 @@ BEGIN
 			EXECUTE InsertarEmpleados @InEmpleadoNombre, @InEmpleadoIdTipoIdentificacion,
 				@InEmpleadoValorDocumentoIdentificacion, @InEmpleadoFechaNacimiento, @InEmpleadoIdPuesto,
 				@InEmpleadoIdDepartamento, @InEmpleadoUsername, @InEmpleadoPwd, @OutResultCode OUTPUT
+			Print('Insertar empleado')
 			--SELECT @OutResultCode;
 			SET @Cont=@Cont+1;
 		END
@@ -426,6 +507,7 @@ BEGIN
 			EXECUTE
 				InsertarJornada @InIdJornada, @InJornadaValorDocumentoIdentificacion,
 				@IdSemanaActual, @OutResultCode OUTPUT
+			Print('Jornada')
 			--SELECT @OutResultCode;
 			SET @Cont=@Cont+1;
 		END
@@ -488,6 +570,7 @@ BEGIN
 			@InAsociaValorDocumentoIdentificacion, @OutResultCode OUTPUT
 			--SELECT @OutResultCode;
 		END
+		Print('Asociar con deduccion')
 		SET @Cont=@Cont+1;
 	END
 	DROP TABLE #TempAsocia
@@ -527,12 +610,14 @@ BEGIN
 				@InDesValorDocumentoIdentificacion, @OutResultCode OUTPUT
 		--SELECT @OutResultCode;
 		SET @Cont=@Cont+1;
+		Print('Desasociar')
 	END
 	DROP TABLE #TempDeasocia
 
 
 	--Se incrementa el día para continuar leyendo el XML
 	SET @FechaActual=DATEADD(DAY,1,@FechaActual)
+	SELECT @CantDias;
 	SET @CantDias=@CantDias+1;
 END;
 SET NOCOUNT OFF;
