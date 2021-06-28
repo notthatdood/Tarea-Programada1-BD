@@ -152,3 +152,16 @@ CREATE TABLE DeduccionXEmpleadoXMes ( Id INT IDENTITY(1,1) PRIMARY KEY,
 						FOREIGN KEY (IdTipoDeduccion) REFERENCES TipoDeduccion (Id),
 						FOREIGN KEY (IdPlanillaMensualXEmpleado) REFERENCES PlanillaMensualXEmpleado (Id))
 GO
+
+CREATE TABLE Corrida ( Id INT IDENTITY(1,1) PRIMARY KEY
+					,FechaOperacion DATE
+					,TipoRegistro INT
+					,PostTime DATETIME
+					)
+GO
+
+CREATE TABLE DetalleCorrida (Id INT IDENTITY (1,1) PRIMARY KEY
+							,IdCorrida INT
+							,TipoOperacionXML INT
+							,RefID INT
+							,FOREIGN KEY (IdCorrida) REFERENCES Corrida (Id)) 

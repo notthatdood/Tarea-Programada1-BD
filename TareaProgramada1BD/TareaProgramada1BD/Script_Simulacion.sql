@@ -149,14 +149,20 @@ BEGIN
 	CREATE TABLE #TempAsistencia(Id INT IDENTITY(1,1) PRIMARY KEY,
 				    FechaEntrada DATETIME,
 					FechaSalida DATETIME,
-					ValorDocumentoIdentidad INT)
+					ValorDocumentoIdentidad INT,
+					Secuencia INT,
+					ProduceError INT)
 	INSERT INTO #TempAsistencia (FechaEntrada,
 								 FechaSalida,
-								 ValorDocumentoIdentidad)
+								 ValorDocumentoIdentidad,
+								 Secuencia,
+								 ProduceError)
 	SELECT
 		Marca.value('@FechaEntrada','datetime') AS FechaEntrada,
 		Marca.value('@FechaSalida','datetime') AS FechaSalida,
-		Marca.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentidad
+		Marca.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentidad,
+		Marca.value('@Secuencia','int') AS Secuencia,
+		Marca.value('@ProduceError','int') AS ProduceError
 	FROM 
 		@doc.nodes('/Datos') AS A(Datos)
 	CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
@@ -275,10 +281,16 @@ BEGIN
 
 	-----------------Segmento encargado de eliminar empleados----------------------------------
 	CREATE TABLE #TempEliminar(Id INT IDENTITY(1,1) PRIMARY KEY,
-				    ValorDocumentoIdentidad INT)
-	INSERT INTO #TempEliminar(ValorDocumentoIdentidad)
+				    ValorDocumentoIdentidad INT,
+					Secuencia INT,
+					ProduceError INT)
+	INSERT INTO #TempEliminar(ValorDocumentoIdentidad,
+							  Secuencia,
+							  ProduceError)
 	SELECT
-		Eliminar.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentidad
+		Eliminar.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentidad,
+		Eliminar.value('@Secuencia','int') AS Secuencia,
+		Eliminar.value('@ProduceError','int') AS ProduceError
 	FROM 
 		@doc.nodes('/Datos') AS A(Datos)
 	CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
@@ -423,7 +435,9 @@ BEGIN
 						IdPuesto INT,
 						FechaNacimiento DATE,
 						Username VARCHAR(30),
-						Pwd VARCHAR(30))
+						Pwd VARCHAR(30),
+						Secuencia INT,
+						ProduceError INT)
 		INSERT INTO #TempEmpleados(Nombre,
 								   IdTipoIdentificacion,
 								   ValorDocumentoIdentificacion,
@@ -431,7 +445,9 @@ BEGIN
 								   IdPuesto,
 								   FechaNacimiento,
 								   Username,
-								   Pwd)
+								   Pwd,
+								   Secuencia,
+								   ProduceError)
 		SELECT
 			NuevoEmpleado.value('@Nombre','varchar(50)') AS Nombre,
 			NuevoEmpleado.value('@idTipoDocumentacionIdentidad','int') AS IdTipoIdentificacion,
@@ -440,7 +456,9 @@ BEGIN
 			NuevoEmpleado.value('@idPuesto','int') AS IdPuesto,
 			NuevoEmpleado.value('@FechaNacimiento','date') AS FechaNacimiento,
 			NuevoEmpleado.value('@Username','varchar(30)') AS Username,
-			NuevoEmpleado.value('@Password','varchar(30)') AS Pwd
+			NuevoEmpleado.value('@Password','varchar(30)') AS Pwd,
+			NuevoEmpleado.value('@Secuencia','int') AS Secuencia,
+			NuevoEmpleado.value('@ProduceError','int') AS ProduceError
 		FROM 
 			@doc.nodes('/Datos') AS A(Datos)
 		CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
@@ -448,7 +466,9 @@ BEGIN
 		WHERE
 			Operacion.value('@Fecha', 'date')=@FechaActual
 		SELECT
-			@Cont=1, @LargoTabla=COUNT(*) FROM #TempEmpleados
+			@Cont=1, @LargoTabla=COUNT(*)
+		FROM
+			#TempEmpleados
 		WHILE(@Cont<=@LargoTabla)
 		BEGIN
 			SELECT 
@@ -479,12 +499,18 @@ BEGIN
 		-----------------Segmento encargado de las jornadas----------------------------------
 		CREATE TABLE #TempJornada(Id INT IDENTITY(1,1) PRIMARY KEY,
 					    IdJornada INT,
-						ValorDocumentoIdentificacion INT)
+						ValorDocumentoIdentificacion INT,
+						Secuencia INT,
+						ProduceError INT)
 		INSERT INTO #TempJornada(IdJornada,
-								 ValorDocumentoIdentificacion)
+								 ValorDocumentoIdentificacion,
+								 Secuencia,
+								 ProduceError)
 		SELECT
 			Jornada.value('@IdJornada','int') AS IdJornada,
-			Jornada.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentificacion
+			Jornada.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentificacion,
+			Jornada.value('@Secuencia','int') AS Secuencia,
+			Jornada.value('@ProduceError','int') AS ProduceError
 		FROM 
 			@doc.nodes('/Datos') AS A(Datos)
 		CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
@@ -522,10 +548,14 @@ BEGIN
 	CREATE TABLE #TempAsocia(Id INT IDENTITY(1,1) PRIMARY KEY,
 				    IdDeduccion INT,
 					Monto INT,
-					ValorDocumentoIdentidad INT)
+					ValorDocumentoIdentidad INT,
+					Secuencia INT,
+					ProduceError INT)
 	INSERT INTO #TempAsocia(IdDeduccion,
 							Monto,
-							ValorDocumentoIdentidad)
+							ValorDocumentoIdentidad,
+							Secuencia,
+							ProduceError)
 	SELECT
 		Asocia.value('@IdDeduccion','int') AS IdDeduccion,
 		CASE WHEN
@@ -533,7 +563,9 @@ BEGIN
 			ELSE CAST(Asocia.value('@Monto','decimal(10,5)') AS INT)
 		END
 		AS Monto,
-		Asocia.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentidad
+		Asocia.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentidad,
+		Asocia.value('@Secuencia','int') AS Secuencia,
+		Asocia.value('@ProduceError','int') AS ProduceError
 	FROM 
 		@doc.nodes('/Datos') AS A(Datos)
 	CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
@@ -580,12 +612,18 @@ BEGIN
 	-----------------Segmento encargado de deasociar empleados con deducciones----------------------------------
 	CREATE TABLE #TempDeasocia(Id INT IDENTITY(1,1) PRIMARY KEY,
 				    IdDeduccion INT,
-					ValorDocumentoIdentidad INT)
+					ValorDocumentoIdentidad INT,
+					Secuencia INT,
+					ProduceError INT)
 	INSERT INTO #TempDeasocia(IdDeduccion,
-							  ValorDocumentoIdentidad)
+							  ValorDocumentoIdentidad,
+							  Secuencia,
+							  ProduceError)
 	SELECT
 		Deasocia.value('@IdDeduccion','int') AS IdDeduccion,
-		Deasocia.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentidad
+		Deasocia.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentidad,
+		Deasocia.value('@Secuencia','int') AS Secuencia,
+		Deasocia.value('@ProduceError','int') AS ProduceError
 	FROM 
 		@doc.nodes('/Datos') AS A(Datos)
 	CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
