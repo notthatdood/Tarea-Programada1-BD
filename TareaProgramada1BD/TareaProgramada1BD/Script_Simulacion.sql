@@ -823,24 +823,99 @@ BEGIN
 		WHERE
 			Operacion.value('@Fecha', 'date')=@FechaActual
 		SELECT
-			@Cont=1, @LargoTabla=COUNT(*)
+			@SecItera=1,
+			@SecFinal=COUNT(*),
+			@Terminar=0
 		FROM
 			#TempJornada
-		WHILE(@Cont<=@LargoTabla)
+
+		WHILE(@Terminar=0)
 		BEGIN
-			SELECT 
-				@InIdJornada=T.IdJornada,
-				@InJornadaValorDocumentoIdentificacion=T.ValorDocumentoIdentificacion
+			SELECT
+				@SecItera=(DC.RefID)+1
 			FROM
-				#TempJornada T
+				DetalleCorrida DC,
+				Corrida C
 			WHERE
-				T.Id=@Cont;
-			EXECUTE
-				InsertarJornada @InIdJornada, @InJornadaValorDocumentoIdentificacion,
-				@IdSemanaActual, @OutResultCode OUTPUT
-			Print('Jornada')
-			--SELECT @OutResultCode;
-			SET @Cont=@Cont+1;
+				@IdUltimaCorrida=DC.IdCorrida AND
+				DC.Id=@IdUltimoDetalleCorrida AND
+				DC.TipoOperacionXML=5;
+
+			INSERT INTO Bitacora (IdTipoOperacion,
+								  Texto,
+								  Fecha,
+								  IdTipoBitacora)
+			VALUES(5,
+				   'Nueva iteracion procesando jornadas iniciando en '+convert(varchar, @SecItera),
+				   @FechaActual,
+				   1)
+			BEGIN TRY
+				WHILE(@SecItera<=@SecFinal)
+				BEGIN
+					SELECT 
+						@InIdJornada=T.IdJornada,
+						@InJornadaValorDocumentoIdentificacion=T.ValorDocumentoIdentificacion,
+						@ProduceError=T.ProduceError
+					FROM
+						#TempJornada T
+					WHERE
+						T.Id=@SecItera;
+					EXECUTE
+						InsertarJornada @InIdJornada, @InJornadaValorDocumentoIdentificacion,
+						@IdSemanaActual, @OutResultCode OUTPUT
+					--SELECT @OutResultCode;
+					IF(@ProduceError=1)
+						BEGIN
+							SELECT @ProduceError/0;
+						END
+					---------Se inserta en detalle corrida--------------
+					INSERT INTO DetalleCorrida (IdCorrida,
+												TipoOperacionXML,
+												RefID)
+					VALUES(@IdUltimaCorrida,
+						   5,
+						   @SecItera)
+					SET @IdUltimODetalleCorrida=SCOPE_IDENTITY();
+					SET @SecItera=@SecItera+1;
+				END
+				SET @Terminar=1;
+				INSERT INTO Bitacora (IdTipoOperacion,
+									  Texto,
+									  Fecha,
+									  IdTipoBitacora)
+				VALUES(5,
+					   'Se finalizó procesando jornadas en '+convert(varchar, @FechaActual),
+					   @FechaActual,
+					   3)
+			END TRY
+			BEGIN CATCH
+			-------Reiniciando corrida-----------
+				INSERT INTO Corrida (FechaOperacion,
+							 TipoRegistro,
+							 PostTime)
+				VALUES(@FechaActual,
+					   1,
+					   GETDATE())
+				SET @IdUltimaCorrida=SCOPE_IDENTITY();
+
+				INSERT INTO DetalleCorrida (IdCorrida,
+											TipoOperacionXML,
+											RefID)
+				VALUES(@IdUltimaCorrida,
+					   5,
+					   @SecItera)
+				SET @IdUltimODetalleCorrida=SCOPE_IDENTITY();
+
+				INSERT INTO Bitacora (IdTipoOperacion,
+									  Texto,
+									  Fecha,
+									  IdTipoBitacora)
+				VALUES(5,
+					   'Hubo error en el registro numero '+convert(varchar, @SecItera)+
+					   ' procesando jornadas en '+convert(varchar, @FechaActual),
+					   @FechaActual,
+					   2)
+			END CATCH
 		END
 		DROP TABLE #TempJornada
 	END
