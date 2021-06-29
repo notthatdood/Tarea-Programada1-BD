@@ -349,7 +349,6 @@ BEGIN
 					--SELECT @OutResultCode;
 					IF(@ProduceError=1)
 					BEGIN
-						PRINT('ERROR------------------------------------------------------------')
 						SELECT @ProduceError/0;
 					END
 					---------Se inserta en detalle corrida--------------
@@ -449,21 +448,96 @@ BEGIN
 	WHERE
 		Operacion.value('@Fecha', 'date')=@FechaActual
 	SELECT
-		@Cont=1, @LargoTabla=COUNT(*)
+		@SecItera=1,
+		@SecFinal=COUNT(*),
+		@Terminar=0
 	FROM
 		#TempEliminar
-	WHILE(@Cont<=@LargoTabla)
+
+	WHILE(@Terminar=0)
 	BEGIN
-		SELECT 
-			@InEliminarValorDocumentoIdentificacion=T.ValorDocumentoIdentidad
+		SELECT
+			@SecItera=(DC.RefID)+1
 		FROM
-			#TempEliminar T
+			DetalleCorrida DC,
+			Corrida C
 		WHERE
-			T.Id=@Cont;
-		EXECUTE EliminarEmpleados @InEliminarValorDocumentoIdentificacion, @OutResultCode OUTPUT
-		Print('Eliminar empleados')
-		--SELECT @OutResultCode;
-		SET @Cont=@Cont+1;
+			@IdUltimaCorrida=DC.IdCorrida AND
+			DC.Id=@IdUltimoDetalleCorrida AND
+			DC.TipoOperacionXML=2;
+
+		INSERT INTO Bitacora (IdTipoOperacion,
+							  Texto,
+							  Fecha,
+							  IdTipoBitacora)
+		VALUES(2,
+			   'Nueva iteracion procesando eliminar empleados inciando en '+convert(varchar, @SecItera),
+			   @FechaActual,
+			   1)
+		BEGIN TRY
+			WHILE(@SecItera<=@SecFinal)
+			BEGIN
+				SELECT 
+					@InEliminarValorDocumentoIdentificacion=T.ValorDocumentoIdentidad,
+					@ProduceError=T.ProduceError
+				FROM
+					#TempEliminar T
+				WHERE
+					T.Id=@SecItera;
+				EXECUTE EliminarEmpleados @InEliminarValorDocumentoIdentificacion,
+										  @OutResultCode OUTPUT
+				IF(@ProduceError=1)
+					BEGIN
+						SELECT @ProduceError/0;
+					END
+				---------Se inserta en detalle corrida--------------
+				INSERT INTO DetalleCorrida (IdCorrida,
+											TipoOperacionXML,
+											RefID)
+				VALUES(@IdUltimaCorrida,
+					   2,
+					   @SecItera)
+				SET @IdUltimODetalleCorrida=SCOPE_IDENTITY();
+				SET @SecItera=@SecItera+1;
+			END
+			SET @Terminar=1;
+			INSERT INTO Bitacora (IdTipoOperacion,
+								  Texto,
+								  Fecha,
+								  IdTipoBitacora)
+			VALUES(2,
+				   'Se finalizó procesando eliminar empleados en '+convert(varchar, @FechaActual),
+				   @FechaActual,
+				   3)
+		END TRY
+		BEGIN CATCH
+		-------Reiniciando corrida-----------
+			INSERT INTO Corrida (FechaOperacion,
+						 TipoRegistro,
+						 PostTime)
+			VALUES(@FechaActual,
+				   1,
+				   GETDATE())
+			SET @IdUltimaCorrida=SCOPE_IDENTITY();
+
+			INSERT INTO DetalleCorrida (IdCorrida,
+										TipoOperacionXML,
+										RefID)
+			VALUES(@IdUltimaCorrida,
+				   2,
+				   @SecItera)
+			SET @IdUltimODetalleCorrida=SCOPE_IDENTITY();
+
+			INSERT INTO Bitacora (IdTipoOperacion,
+								  Texto,
+								  Fecha,
+								  IdTipoBitacora)
+			VALUES(2,
+				   'Hubo error en el registro numero '+convert(varchar, @SecItera)+
+				   ' procesando eliminar empleados en '+convert(varchar, @FechaActual),
+				   @FechaActual,
+				   2)
+		END CATCH
 	END
 	DROP TABLE #TempEliminar
 
