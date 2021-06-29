@@ -946,110 +946,180 @@ BEGIN
 	WHERE
 		Operacion.value('@Fecha', 'date')=@FechaActual
 	SELECT
-		@Cont=1,
-		@LargoTabla=COUNT(*)
+		@SecItera=1,
+		@SecFinal=COUNT(*),
+		@Terminar=0
 	FROM
 		#TempAsistencia
-	WHILE(@Cont<=@LargoTabla)
+
+	WHILE(@Terminar=0)
 	BEGIN
-		SELECT 
-			@InFechaEntrada=T.FechaEntrada,
-			@InFechaSalida=T.FechaSalida,
-			@InMarcaValorDocumentoIdentificacion=T.ValorDocumentoIdentidad
-		FROM
-			#TempAsistencia T
-		WHERE
-			T.Id=@Cont;
-		--SELECT @InFechaEntrada, @InFechaSalida;
-		EXECUTE MarcarAsistencia @InFechaEntrada,
-								 @InFechaSalida,
-								 @InMarcaValorDocumentoIdentificacion,
-								 @IdMarcaAsistencia OUTPUT,
-								 @OutResultCode OUTPUT
-		Print('Marcar asistencia')
-		--SELECT @OutResultCode;
-		--Pre-procensando datos necesarios para los creditos día--------------------------
 		SELECT
-			@HorasLaboradas=DATEDIFF(hh,@InFechaEntrada,@InFechaSalida);
-		SELECT
-			@HorasEsperadas=DATEDIFF(hh,TDJ.HoraEntrada,TDJ.HoraSalida)
+			@SecItera=(DC.RefID)+1
 		FROM
-			dbo.TiposDeJornada TDJ,
-			dbo.Jornada J,
-			dbo.Empleado E
+			DetalleCorrida DC,
+			Corrida C
 		WHERE
-			TDJ.Id=J.TipoJornada AND
-			J.IdEmpleado=E.Id AND
-			E.ValorDocumentoIdentificacion=@InMarcaValorDocumentoIdentificacion AND
-			J.IdSemana=@IdSemanaActual;
-		SELECT
-			@IdSemanaXEmpleado=PSXM.Id
-		FROM
-			dbo.PlanillaSemanalXEmpleado PSXM,
-			dbo.Empleado E
-		WHERE
-			PSXM.IdSemana=@IdSemanaActual AND
-			PSXM.IdEmpleado=E.Id AND
-			E.ValorDocumentoIdentificacion=@InMarcaValorDocumentoIdentificacion;
-		SET @Auxiliar=@IdSemanaXEmpleado;
-		SELECT
-			@Monto=P.SalarioXHora
-		FROM
-			dbo.Puesto P,
-			dbo.Empleado E
-		WHERE
-			P.Id=E.IdPuesto AND
-			E.ValorDocumentoIdentificacion=@InMarcaValorDocumentoIdentificacion;
+			@IdUltimaCorrida=DC.IdCorrida AND
+			DC.Id=@IdUltimoDetalleCorrida AND
+			DC.TipoOperacionXML=6;
 
-		EXECUTE CrearMovimientoCreditoDia @FechaActual,
-										  @IdSemanaActual,
-										  @InFechaEntrada,
-										  @InFechaSalida,
-										  @InMarcaValorDocumentoIdentificacion,
-										  @IdMarcaAsistencia,
-										  @EsFeriado,
-										  @IdSemanaXEmpleado,
-										  @Monto,
-										  @HorasLaboradas,
-										  @HorasEsperadas,
-										  @IdMovimiento,
-										  @IdE,
-										  @IdMes,
-										  --@Auxiliar OUTPUT,
-										  @OutResultCode OUTPUT;
-		Print('Credito')
-		SELECT @IdMes=PM.Id
-		FROM
-			dbo.PlanillaMensual PM, 
-			dbo.PlanillaSemanal PS, 
-			dbo.PlanillaSemanalXEmpleado PSX
-		WHERE
-			PM.Id=PS.IdMes AND
-			PS.Id=PSX.IdSemana AND
-			PSX.Id=@IdSemanaXEmpleado;
-		SELECT
-			@Monto=PSX.SalarioNeto
-		FROM
-			PlanillaSemanalXEmpleado PSX
-		WHERE
-			PSX.Id=@IdSemanaXEmpleado;
-		SELECT
-			@IdE=E.Id
-		FROM
-			dbo.Empleado E
-		WHERE
-			E.ValorDocumentoIdentificacion=@InMarcaValorDocumentoIdentificacion;
+		INSERT INTO Bitacora (IdTipoOperacion,
+							  Texto,
+							  Fecha,
+							  IdTipoBitacora)
+		VALUES(6,
+			   'Nueva iteracion procesando asistencias iniciando en '+convert(varchar, @SecItera),
+			   @FechaActual,
+			   1)
+		BEGIN TRY
+			WHILE(@SecItera<=@SecFinal)
+			BEGIN
+				SELECT 
+					@InFechaEntrada=T.FechaEntrada,
+					@InFechaSalida=T.FechaSalida,
+					@InMarcaValorDocumentoIdentificacion=T.ValorDocumentoIdentidad,
+					@ProduceError=T.ProduceError
+				FROM
+					#TempAsistencia T
+				WHERE
+					T.Id=@SecItera;
+				--SELECT @InFechaEntrada, @InFechaSalida;
+				EXECUTE MarcarAsistencia @InFechaEntrada,
+										 @InFechaSalida,
+										 @InMarcaValorDocumentoIdentificacion,
+										 @IdMarcaAsistencia OUTPUT,
+										 @OutResultCode OUTPUT
+				Print('Marcar asistencia')
+				--SELECT @OutResultCode;
+				--Pre-procensando datos necesarios para los creditos día--------------------------
+				SELECT
+					@HorasLaboradas=DATEDIFF(hh,@InFechaEntrada,@InFechaSalida);
+				SELECT
+					@HorasEsperadas=DATEDIFF(hh,TDJ.HoraEntrada,TDJ.HoraSalida)
+				FROM
+					dbo.TiposDeJornada TDJ,
+					dbo.Jornada J,
+					dbo.Empleado E
+				WHERE
+					TDJ.Id=J.TipoJornada AND
+					J.IdEmpleado=E.Id AND
+					E.ValorDocumentoIdentificacion=@InMarcaValorDocumentoIdentificacion AND
+					J.IdSemana=@IdSemanaActual;
+				SELECT
+					@IdSemanaXEmpleado=PSXM.Id
+				FROM
+					dbo.PlanillaSemanalXEmpleado PSXM,
+					dbo.Empleado E
+				WHERE
+					PSXM.IdSemana=@IdSemanaActual AND
+					PSXM.IdEmpleado=E.Id AND
+					E.ValorDocumentoIdentificacion=@InMarcaValorDocumentoIdentificacion;
+				SET @Auxiliar=@IdSemanaXEmpleado;
+				SELECT
+					@Monto=P.SalarioXHora
+				FROM
+					dbo.Puesto P,
+					dbo.Empleado E
+				WHERE
+					P.Id=E.IdPuesto AND
+					E.ValorDocumentoIdentificacion=@InMarcaValorDocumentoIdentificacion;
 
-		EXECUTE ActualizarSalarioEmpleado @Monto,
-										  @IdE,
-										  @IdMes,
-										  @OutResultCode OUTPUT;
-		Print('Salario')
-		--SELECT @OutResultCode;
-		--SELECT @FechaActual, @IdSemanaActual, @InFechaEntrada, @InFechaSalida,
-		--@InMarcaValorDocumentoIdentificacion, @IdMarcaAsistencia
-		--SELECT AAA=@Auxiliar;
-		SET @Cont=@Cont+1;
+				EXECUTE CrearMovimientoCreditoDia @FechaActual,
+												  @IdSemanaActual,
+												  @InFechaEntrada,
+												  @InFechaSalida,
+												  @InMarcaValorDocumentoIdentificacion,
+												  @IdMarcaAsistencia,
+												  @EsFeriado,
+												  @IdSemanaXEmpleado,
+												  @Monto,
+												  @HorasLaboradas,
+												  @HorasEsperadas,
+												  @IdMovimiento,
+												  @IdE,
+												  @IdMes,
+												  --@Auxiliar OUTPUT,
+												  @OutResultCode OUTPUT;
+				Print('Credito')
+				SELECT @IdMes=PM.Id
+				FROM
+					dbo.PlanillaMensual PM, 
+					dbo.PlanillaSemanal PS, 
+					dbo.PlanillaSemanalXEmpleado PSX
+				WHERE
+					PM.Id=PS.IdMes AND
+					PS.Id=PSX.IdSemana AND
+					PSX.Id=@IdSemanaXEmpleado;
+				SELECT
+					@Monto=PSX.SalarioNeto
+				FROM
+					PlanillaSemanalXEmpleado PSX
+				WHERE
+					PSX.Id=@IdSemanaXEmpleado;
+				SELECT
+					@IdE=E.Id
+				FROM
+					dbo.Empleado E
+				WHERE
+					E.ValorDocumentoIdentificacion=@InMarcaValorDocumentoIdentificacion;
+
+				EXECUTE ActualizarSalarioEmpleado @Monto,
+												  @IdE,
+												  @IdMes,
+												  @OutResultCode OUTPUT;
+				IF(@ProduceError=1)
+					BEGIN
+						SELECT @ProduceError/0;
+					END
+				---------Se inserta en detalle corrida--------------
+				INSERT INTO DetalleCorrida (IdCorrida,
+											TipoOperacionXML,
+											RefID)
+				VALUES(@IdUltimaCorrida,
+					   6,
+					   @SecItera)
+				SET @IdUltimODetalleCorrida=SCOPE_IDENTITY();
+				SET @SecItera=@SecItera+1;
+			END
+			SET @Terminar=1;
+			INSERT INTO Bitacora (IdTipoOperacion,
+								  Texto,
+								  Fecha,
+								  IdTipoBitacora)
+			VALUES(6,
+				   'Se finalizó procesando asistencias en '+convert(varchar, @FechaActual),
+				   @FechaActual,
+				   3)
+		END TRY
+		BEGIN CATCH
+		-------Reiniciando corrida-----------
+			INSERT INTO Corrida (FechaOperacion,
+						 TipoRegistro,
+						 PostTime)
+			VALUES(@FechaActual,
+				   1,
+				   GETDATE())
+			SET @IdUltimaCorrida=SCOPE_IDENTITY();
+
+			INSERT INTO DetalleCorrida (IdCorrida,
+										TipoOperacionXML,
+										RefID)
+			VALUES(@IdUltimaCorrida,
+				   6,
+				   @SecItera)
+			SET @IdUltimODetalleCorrida=SCOPE_IDENTITY();
+
+			INSERT INTO Bitacora (IdTipoOperacion,
+								  Texto,
+								  Fecha,
+								  IdTipoBitacora)
+			VALUES(6,
+				   'Hubo error en el registro numero '+convert(varchar, @SecItera)+
+				   ' procesando asistencias en '+convert(varchar, @FechaActual),
+				   @FechaActual,
+				   2)
+		END CATCH
 	END
 	DROP TABLE #TempAsistencia
 	
