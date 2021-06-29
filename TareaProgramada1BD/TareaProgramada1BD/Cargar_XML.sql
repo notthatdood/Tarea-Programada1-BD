@@ -1,5 +1,5 @@
-Use TareaProgramada;
-Go
+USE TareaProgramada;
+GO
 
 CREATE PROCEDURE dbo.InsertarCatalogos AS
 
@@ -180,6 +180,19 @@ CREATE PROCEDURE dbo.InsertarUsuario AS
 
 GO
 
+CREATE PROCEDURE dbo.InsertarTipoOperacion AS
+
+	INSERT INTO TipoOperacion (Nombre)
+	VALUES('Agregar Empleado'),
+		  ('Eliminar Empleado'),
+		  ('Asociar Deducción'),
+		  ('Desasociar Deducción'),
+		  ('Asociar Jornada'),
+		  ('Procesar Asistencia')
+
+GO
+
 EXECUTE InsertarCatalogos
 --Execute insertarEmpleado
 EXECUTE InsertarUsuario
+EXECUTE InsertarTipoOperacion

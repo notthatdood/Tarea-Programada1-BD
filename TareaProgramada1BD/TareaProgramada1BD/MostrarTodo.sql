@@ -23,3 +23,7 @@ SELECT * FROM TipoMovimiento;
 SELECT * FROM TipoMovimientoDeduccion;
 SELECT * FROM TiposDeJornada;
 SELECT * FROM Usuario;
+SELECT * FROM Corrida;
+SELECT * FROM DetalleCorrida;
+SELECT * FROM TipoOperacion;
+SELECT * FROM Bitacora;

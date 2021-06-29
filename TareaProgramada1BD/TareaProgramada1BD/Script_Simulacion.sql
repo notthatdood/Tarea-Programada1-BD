@@ -15,6 +15,8 @@ DECLARE @FechaActual DATE
 	, @IdMesActual INT
 	, @Cont INT
 	, @LargoTabla INT
+	, @SecItera INT
+	, @SecFinal INT
 	, @InFechaEntrada DATETIME
 	, @InFechaSalida DATETIME
 	, @InMarcaValorDocumentoIdentificacion INT
@@ -55,7 +57,11 @@ DECLARE @FechaActual DATE
 	---Variables par insertar mes
 	,@InFechaFinal DATE
 	,@InFechaTemporal DATE
-	,@Bandera BIT;
+	,@Bandera BIT
+	,@Terminar INT
+	,@IdUltimaCorrida INT
+	,@IdUltimoDetalleCorrida INT
+	,@ProduceError INT;
 
 	--SELECT @FechaItera=Min(FechaOperacion), @FechaFinal=max(FechaOperacion) FROM @doc.nodes('/FechaOperacion');
 	SELECT
@@ -70,6 +76,7 @@ DECLARE @FechaActual DATE
 SET @FechaActual=@doc.value('(/Datos/Operacion/@Fecha)[1]','date')
 SET @CantDias=1;
 SET @IdMesActual=0;
+SET @IdUltimoDetalleCorrida=1;
 SET NOCOUNT ON;
 WHILE(@CantDias<@FechaFinal)
 BEGIN
@@ -126,199 +133,17 @@ BEGIN
 	BEGIN
 		SET @EsFeriado=0;
 	END
-	--SELECT @EsFeriado AS Feriado;
-
-	--Este IF revisa si se trata o no de un viernes
-	--IF(DATEPART(dw, @FechaActual)=6) --ANDRES 
-	/*IF(DATEPART(dw, @FechaActual)=5) --KEYLOR
-	BEGIN
-		---------------------Este segmento crea las PlanillaXEmpleado y genera los movimientos---------------
-		IF(DATEDIFF(day, DATEADD(d,1,EOMONTH(@FechaActual,-1)), @FechaActual)<=7)
-		BEGIN
-
-			EXECUTE InsertarMesXEmpleado @IdMesActual,
-										 @OutResultCode OUTPUT
-			--SELECT @OutResultCode
-		END;
-		EXECUTE InsertarSemanaXEmpleado @IdSemanaActual,
-										@OutResultCode OUTPUT
-	END*/
+	---------Se inserta en corrida--------------
+	INSERT INTO Corrida (FechaOperacion,
+						 TipoRegistro,
+						 PostTime)
+	VALUES(@FechaActual,
+		   1,
+		   GETDATE())
+	SET @IdUltimaCorrida=SCOPE_IDENTITY();
 
 
-	-----------------Segmento encargado de marcar la asistencia----------------------------------
-	CREATE TABLE #TempAsistencia(Id INT IDENTITY(1,1) PRIMARY KEY,
-				    FechaEntrada DATETIME,
-					FechaSalida DATETIME,
-					ValorDocumentoIdentidad INT,
-					Secuencia INT,
-					ProduceError INT)
-	INSERT INTO #TempAsistencia (FechaEntrada,
-								 FechaSalida,
-								 ValorDocumentoIdentidad,
-								 Secuencia,
-								 ProduceError)
-	SELECT
-		Marca.value('@FechaEntrada','datetime') AS FechaEntrada,
-		Marca.value('@FechaSalida','datetime') AS FechaSalida,
-		Marca.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentidad,
-		Marca.value('@Secuencia','int') AS Secuencia,
-		Marca.value('@ProduceError','int') AS ProduceError
-	FROM 
-		@doc.nodes('/Datos') AS A(Datos)
-	CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
-	CROSS APPLY B.Operacion.nodes('./MarcaDeAsistencia ') AS C(Marca)
-	WHERE
-		Operacion.value('@Fecha', 'date')=@FechaActual
-	SELECT
-		@Cont=1,
-		@LargoTabla=COUNT(*)
-	FROM
-		#TempAsistencia
-	WHILE(@Cont<=@LargoTabla)
-	BEGIN
-		SELECT 
-			@InFechaEntrada=T.FechaEntrada,
-			@InFechaSalida=T.FechaSalida,
-			@InMarcaValorDocumentoIdentificacion=T.ValorDocumentoIdentidad
-		FROM
-			#TempAsistencia T
-		WHERE
-			T.Id=@Cont;
-		--SELECT @InFechaEntrada, @InFechaSalida;
-		EXECUTE MarcarAsistencia @InFechaEntrada,
-								 @InFechaSalida,
-								 @InMarcaValorDocumentoIdentificacion,
-								 @IdMarcaAsistencia OUTPUT,
-								 @OutResultCode OUTPUT
-		Print('Marcar asistencia')
-		--SELECT @OutResultCode;
-		--Pre-procensando datos necesarios para los creditos día--------------------------
-		SELECT
-			@HorasLaboradas=DATEDIFF(hh,@InFechaEntrada,@InFechaSalida);
-		SELECT
-			@HorasEsperadas=DATEDIFF(hh,TDJ.HoraEntrada,TDJ.HoraSalida)
-		FROM
-			dbo.TiposDeJornada TDJ,
-			dbo.Jornada J,
-			dbo.Empleado E
-		WHERE
-			TDJ.Id=J.TipoJornada AND
-			J.IdEmpleado=E.Id AND
-			E.ValorDocumentoIdentificacion=@InMarcaValorDocumentoIdentificacion AND
-			J.IdSemana=@IdSemanaActual;
-		SELECT
-			@IdSemanaXEmpleado=PSXM.Id
-		FROM
-			dbo.PlanillaSemanalXEmpleado PSXM,
-			dbo.Empleado E
-		WHERE
-			PSXM.IdSemana=@IdSemanaActual AND
-			PSXM.IdEmpleado=E.Id AND
-			E.ValorDocumentoIdentificacion=@InMarcaValorDocumentoIdentificacion;
-		SET @Auxiliar=@IdSemanaXEmpleado;
-		SELECT
-			@Monto=P.SalarioXHora
-		FROM
-			dbo.Puesto P,
-			dbo.Empleado E
-		WHERE
-			P.Id=E.IdPuesto AND
-			E.ValorDocumentoIdentificacion=@InMarcaValorDocumentoIdentificacion;
-
-		EXECUTE CrearMovimientoCreditoDia @FechaActual,
-										  @IdSemanaActual,
-										  @InFechaEntrada,
-										  @InFechaSalida,
-										  @InMarcaValorDocumentoIdentificacion,
-										  @IdMarcaAsistencia,
-										  @EsFeriado,
-										  @IdSemanaXEmpleado,
-										  @Monto,
-										  @HorasLaboradas,
-										  @HorasEsperadas,
-										  @IdMovimiento,
-										  @IdE,
-										  @IdMes,
-										  --@Auxiliar OUTPUT,
-										  @OutResultCode OUTPUT;
-		Print('Credito')
-		SELECT @IdMes=PM.Id
-		FROM
-			dbo.PlanillaMensual PM, 
-			dbo.PlanillaSemanal PS, 
-			dbo.PlanillaSemanalXEmpleado PSX
-		WHERE
-			PM.Id=PS.IdMes AND
-			PS.Id=PSX.IdSemana AND
-			PSX.Id=@IdSemanaXEmpleado;
-		SELECT
-			@Monto=PSX.SalarioNeto
-		FROM
-			PlanillaSemanalXEmpleado PSX
-		WHERE
-			PSX.Id=@IdSemanaXEmpleado;
-		SELECT
-			@IdE=E.Id
-		FROM
-			dbo.Empleado E
-		WHERE
-			E.ValorDocumentoIdentificacion=@InMarcaValorDocumentoIdentificacion;
-
-		EXECUTE ActualizarSalarioEmpleado @Monto,
-										  @IdE,
-										  @IdMes,
-										  @OutResultCode OUTPUT;
-		Print('Salario')
-		--SELECT @OutResultCode;
-		--SELECT @FechaActual, @IdSemanaActual, @InFechaEntrada, @InFechaSalida,
-		--@InMarcaValorDocumentoIdentificacion, @IdMarcaAsistencia
-		--SELECT AAA=@Auxiliar;
-		SET @Cont=@Cont+1;
-	END
-	DROP TABLE #TempAsistencia
-	
-
-
-	-----------------Segmento encargado de eliminar empleados----------------------------------
-	CREATE TABLE #TempEliminar(Id INT IDENTITY(1,1) PRIMARY KEY,
-				    ValorDocumentoIdentidad INT,
-					Secuencia INT,
-					ProduceError INT)
-	INSERT INTO #TempEliminar(ValorDocumentoIdentidad,
-							  Secuencia,
-							  ProduceError)
-	SELECT
-		Eliminar.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentidad,
-		Eliminar.value('@Secuencia','int') AS Secuencia,
-		Eliminar.value('@ProduceError','int') AS ProduceError
-	FROM 
-		@doc.nodes('/Datos') AS A(Datos)
-	CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
-	CROSS APPLY B.Operacion.nodes('./EliminarEmpleado  ') AS C(Eliminar)
-	WHERE
-		Operacion.value('@Fecha', 'date')=@FechaActual
-	SELECT
-		@Cont=1, @LargoTabla=COUNT(*)
-	FROM
-		#TempEliminar
-	WHILE(@Cont<=@LargoTabla)
-	BEGIN
-		SELECT 
-			@InEliminarValorDocumentoIdentificacion=T.ValorDocumentoIdentidad
-		FROM
-			#TempEliminar T
-		WHERE
-			T.Id=@Cont;
-		EXECUTE EliminarEmpleados @InEliminarValorDocumentoIdentificacion, @OutResultCode OUTPUT
-		Print('Eliminar empleados')
-		--SELECT @OutResultCode;
-		SET @Cont=@Cont+1;
-	END
-	DROP TABLE #TempEliminar
-
-
-
-	--Este IF revisa si se trata o no de un jueves-----------------------------------------------------
+		--Este IF revisa si se trata o no de un jueves-----------------------------------------------------
 	--IF(DATEPART(dw, @FechaActual)=5)--ANDRES
 	IF(DATEPART(dw, @FechaActual)=4)--KEYLOR
 	BEGIN
@@ -466,83 +291,170 @@ BEGIN
 		WHERE
 			Operacion.value('@Fecha', 'date')=@FechaActual
 		SELECT
-			@Cont=1, @LargoTabla=COUNT(*)
+			@SecItera=1,
+			@SecFinal=COUNT(*),
+			@Terminar=0
 		FROM
 			#TempEmpleados
-		WHILE(@Cont<=@LargoTabla)
+
+
+		WHILE(@Terminar=0)
 		BEGIN
-			SELECT 
-				@InEmpleadoNombre=T.Nombre,
-				@InEmpleadoIdTipoIdentificacion=T.IdTipoIdentificacion,
-				@InEmpleadoValorDocumentoIdentificacion=T.ValorDocumentoIdentificacion,
-				@InEmpleadoFechaNacimiento=T.FechaNacimiento,
-				@InEmpleadoIdPuesto=T.IdPuesto,
-				@InEmpleadoIdDepartamento=T.IdDepartamento,
-				@InEmpleadoUsername=T.Username,
-				@InEmpleadoPwd=T.Pwd
+			SELECT
+				@SecItera=(DC.RefID)+1
 			FROM
-				#TempEmpleados T
+				DetalleCorrida DC,
+				Corrida C
 			WHERE
-				T.Id=@Cont;
-			EXECUTE InsertarEmpleados @InEmpleadoNombre, @InEmpleadoIdTipoIdentificacion,
-				@InEmpleadoValorDocumentoIdentificacion, @InEmpleadoFechaNacimiento, @InEmpleadoIdPuesto,
-				@InEmpleadoIdDepartamento, @InEmpleadoUsername, @InEmpleadoPwd, @OutResultCode OUTPUT
-			Print('Insertar empleado')
-			--SELECT @OutResultCode;
-			SET @Cont=@Cont+1;
+				@IdUltimaCorrida=DC.IdCorrida AND
+				DC.Id=@IdUltimoDetalleCorrida AND
+				DC.TipoOperacionXML=1;
+
+
+			INSERT INTO Bitacora (IdDetalleCorrida,
+	   							  Texto)
+			VALUES(@IdUltimoDetalleCorrida,
+				   'Nueva iteracion procesando nuevos empleados inciando en '+convert(varchar, @SecItera))
+			BEGIN TRY
+				WHILE(@SecItera<=@SecFinal)
+				BEGIN
+				PRINT('SecItera '+convert(varchar, @SecItera)+' SecFinal '+convert(varchar, @SecFinal));
+					SELECT 
+						@InEmpleadoNombre=T.Nombre,
+						@InEmpleadoIdTipoIdentificacion=T.IdTipoIdentificacion,
+						@InEmpleadoValorDocumentoIdentificacion=T.ValorDocumentoIdentificacion,
+						@InEmpleadoFechaNacimiento=T.FechaNacimiento,
+						@InEmpleadoIdPuesto=T.IdPuesto,
+						@InEmpleadoIdDepartamento=T.IdDepartamento,
+						@InEmpleadoUsername=T.Username,
+						@InEmpleadoPwd=T.Pwd,
+						@ProduceError=T.ProduceError
+					FROM
+						#TempEmpleados T
+					WHERE
+						T.Id=@SecItera;
+					EXECUTE InsertarEmpleados @InEmpleadoNombre,
+											  @InEmpleadoIdTipoIdentificacion,
+											  @InEmpleadoValorDocumentoIdentificacion,
+											  @InEmpleadoFechaNacimiento,
+											  @InEmpleadoIdPuesto,
+											  @InEmpleadoIdDepartamento,
+											  @InEmpleadoUsername,
+											  @InEmpleadoPwd,
+											  @OutResultCode OUTPUT
+					--SELECT @OutResultCode;
+					IF(@ProduceError=1)
+					BEGIN
+						PRINT('ERROR------------------------------------------------------------')
+						SELECT @ProduceError/0;
+					END
+					---------Se inserta en detalle corrida--------------
+					INSERT INTO DetalleCorrida (IdCorrida,
+												TipoOperacionXML,
+												RefID)
+					VALUES(@IdUltimaCorrida,
+						   1,
+						   @SecItera)
+					SET @IdUltimODetalleCorrida=SCOPE_IDENTITY();
+					SET @SecItera=@SecItera+1;
+				END
+				SET @Terminar=1;
+				INSERT INTO Bitacora (IdDetalleCorrida,
+											Texto)
+				VALUES(@IdUltimoDetalleCorrida,
+					   'Se finalizó procesando nuevos empleados en '+convert(varchar, @FechaActual))
+			END TRY
+			BEGIN CATCH
+			-------Reiniciando corrida-----------
+				INSERT INTO Corrida (FechaOperacion,
+							 TipoRegistro,
+							 PostTime)
+				VALUES(@FechaActual,
+					   1,
+					   GETDATE())
+				SET @IdUltimaCorrida=SCOPE_IDENTITY();
+
+				INSERT INTO DetalleCorrida (IdCorrida,
+											TipoOperacionXML,
+											RefID)
+				VALUES(@IdUltimaCorrida,
+					   1,
+					   @SecItera)
+				SET @IdUltimODetalleCorrida=SCOPE_IDENTITY();
+
+				INSERT INTO Bitacora (IdDetalleCorrida,
+											Texto)
+				VALUES(@IdUltimoDetalleCorrida,
+					   'Hubo error en el registro numero '+convert(varchar, @SecItera)+
+					   ' procesando nuevos empleados en '+convert(varchar, @FechaActual))
+			END CATCH
 		END
 		DROP TABLE #TempEmpleados
+	END
 		
 
 
 
-		-----------------Segmento encargado de las jornadas----------------------------------
-		CREATE TABLE #TempJornada(Id INT IDENTITY(1,1) PRIMARY KEY,
-					    IdJornada INT,
-						ValorDocumentoIdentificacion INT,
-						Secuencia INT,
-						ProduceError INT)
-		INSERT INTO #TempJornada(IdJornada,
-								 ValorDocumentoIdentificacion,
-								 Secuencia,
-								 ProduceError)
-		SELECT
-			Jornada.value('@IdJornada','int') AS IdJornada,
-			Jornada.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentificacion,
-			Jornada.value('@Secuencia','int') AS Secuencia,
-			Jornada.value('@ProduceError','int') AS ProduceError
-		FROM 
-			@doc.nodes('/Datos') AS A(Datos)
-		CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
-		CROSS APPLY B.Operacion.nodes('./TipoDeJornadaProximaSemana') AS C(Jornada)
-		WHERE
-			Operacion.value('@Fecha', 'date')=@FechaActual
-		SELECT
-			@Cont=1, @LargoTabla=COUNT(*)
-		FROM
-			#TempJornada
-		WHILE(@Cont<=@LargoTabla)
+
+
+	--SELECT @EsFeriado AS Feriado;
+
+	--Este IF revisa si se trata o no de un viernes
+	--IF(DATEPART(dw, @FechaActual)=6) --ANDRES 
+	/*IF(DATEPART(dw, @FechaActual)=5) --KEYLOR
+	BEGIN
+		---------------------Este segmento crea las PlanillaXEmpleado y genera los movimientos---------------
+		IF(DATEDIFF(day, DATEADD(d,1,EOMONTH(@FechaActual,-1)), @FechaActual)<=7)
 		BEGIN
-			SELECT 
-				@InIdJornada=T.IdJornada,
-				@InJornadaValorDocumentoIdentificacion=T.ValorDocumentoIdentificacion
-			FROM
-				#TempJornada T
-			WHERE
-				T.Id=@Cont;
-			EXECUTE
-				InsertarJornada @InIdJornada, @InJornadaValorDocumentoIdentificacion,
-				@IdSemanaActual, @OutResultCode OUTPUT
-			Print('Jornada')
-			--SELECT @OutResultCode;
-			SET @Cont=@Cont+1;
-		END
-		DROP TABLE #TempJornada
+
+			EXECUTE InsertarMesXEmpleado @IdMesActual,
+										 @OutResultCode OUTPUT
+			--SELECT @OutResultCode
+		END;
+		EXECUTE InsertarSemanaXEmpleado @IdSemanaActual,
+										@OutResultCode OUTPUT
+	END*/
+
+
+
+
+	-----------------Segmento encargado de eliminar empleados----------------------------------
+	CREATE TABLE #TempEliminar(Id INT IDENTITY(1,1) PRIMARY KEY,
+				    ValorDocumentoIdentidad INT,
+					Secuencia INT,
+					ProduceError INT)
+	INSERT INTO #TempEliminar(ValorDocumentoIdentidad,
+							  Secuencia,
+							  ProduceError)
+	SELECT
+		Eliminar.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentidad,
+		Eliminar.value('@Secuencia','int') AS Secuencia,
+		Eliminar.value('@ProduceError','int') AS ProduceError
+	FROM 
+		@doc.nodes('/Datos') AS A(Datos)
+	CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
+	CROSS APPLY B.Operacion.nodes('./EliminarEmpleado  ') AS C(Eliminar)
+	WHERE
+		Operacion.value('@Fecha', 'date')=@FechaActual
+	SELECT
+		@Cont=1, @LargoTabla=COUNT(*)
+	FROM
+		#TempEliminar
+	WHILE(@Cont<=@LargoTabla)
+	BEGIN
+		SELECT 
+			@InEliminarValorDocumentoIdentificacion=T.ValorDocumentoIdentidad
+		FROM
+			#TempEliminar T
+		WHERE
+			T.Id=@Cont;
+		EXECUTE EliminarEmpleados @InEliminarValorDocumentoIdentificacion, @OutResultCode OUTPUT
+		Print('Eliminar empleados')
+		--SELECT @OutResultCode;
+		SET @Cont=@Cont+1;
 	END
+	DROP TABLE #TempEliminar
 
-
-
-	
 
 	-----------------Segmento encargado de asociar empleados a deducciones----------------------------------
 	CREATE TABLE #TempAsocia(Id INT IDENTITY(1,1) PRIMARY KEY,
@@ -652,6 +564,193 @@ BEGIN
 	END
 	DROP TABLE #TempDeasocia
 
+	--IF(DATEPART(dw, @FechaActual)=5)--ANDRES
+	IF(DATEPART(dw, @FechaActual)=4)--KEYLOR
+	BEGIN
+		-----------------Segmento encargado de las jornadas----------------------------------
+		CREATE TABLE #TempJornada(Id INT IDENTITY(1,1) PRIMARY KEY,
+					    IdJornada INT,
+						ValorDocumentoIdentificacion INT,
+						Secuencia INT,
+						ProduceError INT)
+		INSERT INTO #TempJornada(IdJornada,
+								 ValorDocumentoIdentificacion,
+								 Secuencia,
+								 ProduceError)
+		SELECT
+			Jornada.value('@IdJornada','int') AS IdJornada,
+			Jornada.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentificacion,
+			Jornada.value('@Secuencia','int') AS Secuencia,
+			Jornada.value('@ProduceError','int') AS ProduceError
+		FROM 
+			@doc.nodes('/Datos') AS A(Datos)
+		CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
+		CROSS APPLY B.Operacion.nodes('./TipoDeJornadaProximaSemana') AS C(Jornada)
+		WHERE
+			Operacion.value('@Fecha', 'date')=@FechaActual
+		SELECT
+			@Cont=1, @LargoTabla=COUNT(*)
+		FROM
+			#TempJornada
+		WHILE(@Cont<=@LargoTabla)
+		BEGIN
+			SELECT 
+				@InIdJornada=T.IdJornada,
+				@InJornadaValorDocumentoIdentificacion=T.ValorDocumentoIdentificacion
+			FROM
+				#TempJornada T
+			WHERE
+				T.Id=@Cont;
+			EXECUTE
+				InsertarJornada @InIdJornada, @InJornadaValorDocumentoIdentificacion,
+				@IdSemanaActual, @OutResultCode OUTPUT
+			Print('Jornada')
+			--SELECT @OutResultCode;
+			SET @Cont=@Cont+1;
+		END
+		DROP TABLE #TempJornada
+	END
+
+	
+	-----------------Segmento encargado de marcar la asistencia----------------------------------
+	CREATE TABLE #TempAsistencia(Id INT IDENTITY(1,1) PRIMARY KEY,
+				    FechaEntrada DATETIME,
+					FechaSalida DATETIME,
+					ValorDocumentoIdentidad INT,
+					Secuencia INT,
+					ProduceError INT)
+	INSERT INTO #TempAsistencia (FechaEntrada,
+								 FechaSalida,
+								 ValorDocumentoIdentidad,
+								 Secuencia,
+								 ProduceError)
+	SELECT
+		Marca.value('@FechaEntrada','datetime') AS FechaEntrada,
+		Marca.value('@FechaSalida','datetime') AS FechaSalida,
+		Marca.value('@ValorDocumentoIdentidad','int') AS ValorDocumentoIdentidad,
+		Marca.value('@Secuencia','int') AS Secuencia,
+		Marca.value('@ProduceError','int') AS ProduceError
+	FROM 
+		@doc.nodes('/Datos') AS A(Datos)
+	CROSS APPLY A.Datos.nodes('./Operacion') AS B(Operacion)
+	CROSS APPLY B.Operacion.nodes('./MarcaDeAsistencia ') AS C(Marca)
+	WHERE
+		Operacion.value('@Fecha', 'date')=@FechaActual
+	SELECT
+		@Cont=1,
+		@LargoTabla=COUNT(*)
+	FROM
+		#TempAsistencia
+	WHILE(@Cont<=@LargoTabla)
+	BEGIN
+		SELECT 
+			@InFechaEntrada=T.FechaEntrada,
+			@InFechaSalida=T.FechaSalida,
+			@InMarcaValorDocumentoIdentificacion=T.ValorDocumentoIdentidad
+		FROM
+			#TempAsistencia T
+		WHERE
+			T.Id=@Cont;
+		--SELECT @InFechaEntrada, @InFechaSalida;
+		EXECUTE MarcarAsistencia @InFechaEntrada,
+								 @InFechaSalida,
+								 @InMarcaValorDocumentoIdentificacion,
+								 @IdMarcaAsistencia OUTPUT,
+								 @OutResultCode OUTPUT
+		Print('Marcar asistencia')
+		--SELECT @OutResultCode;
+		--Pre-procensando datos necesarios para los creditos día--------------------------
+		SELECT
+			@HorasLaboradas=DATEDIFF(hh,@InFechaEntrada,@InFechaSalida);
+		SELECT
+			@HorasEsperadas=DATEDIFF(hh,TDJ.HoraEntrada,TDJ.HoraSalida)
+		FROM
+			dbo.TiposDeJornada TDJ,
+			dbo.Jornada J,
+			dbo.Empleado E
+		WHERE
+			TDJ.Id=J.TipoJornada AND
+			J.IdEmpleado=E.Id AND
+			E.ValorDocumentoIdentificacion=@InMarcaValorDocumentoIdentificacion AND
+			J.IdSemana=@IdSemanaActual;
+		SELECT
+			@IdSemanaXEmpleado=PSXM.Id
+		FROM
+			dbo.PlanillaSemanalXEmpleado PSXM,
+			dbo.Empleado E
+		WHERE
+			PSXM.IdSemana=@IdSemanaActual AND
+			PSXM.IdEmpleado=E.Id AND
+			E.ValorDocumentoIdentificacion=@InMarcaValorDocumentoIdentificacion;
+		SET @Auxiliar=@IdSemanaXEmpleado;
+		SELECT
+			@Monto=P.SalarioXHora
+		FROM
+			dbo.Puesto P,
+			dbo.Empleado E
+		WHERE
+			P.Id=E.IdPuesto AND
+			E.ValorDocumentoIdentificacion=@InMarcaValorDocumentoIdentificacion;
+
+		EXECUTE CrearMovimientoCreditoDia @FechaActual,
+										  @IdSemanaActual,
+										  @InFechaEntrada,
+										  @InFechaSalida,
+										  @InMarcaValorDocumentoIdentificacion,
+										  @IdMarcaAsistencia,
+										  @EsFeriado,
+										  @IdSemanaXEmpleado,
+										  @Monto,
+										  @HorasLaboradas,
+										  @HorasEsperadas,
+										  @IdMovimiento,
+										  @IdE,
+										  @IdMes,
+										  --@Auxiliar OUTPUT,
+										  @OutResultCode OUTPUT;
+		Print('Credito')
+		SELECT @IdMes=PM.Id
+		FROM
+			dbo.PlanillaMensual PM, 
+			dbo.PlanillaSemanal PS, 
+			dbo.PlanillaSemanalXEmpleado PSX
+		WHERE
+			PM.Id=PS.IdMes AND
+			PS.Id=PSX.IdSemana AND
+			PSX.Id=@IdSemanaXEmpleado;
+		SELECT
+			@Monto=PSX.SalarioNeto
+		FROM
+			PlanillaSemanalXEmpleado PSX
+		WHERE
+			PSX.Id=@IdSemanaXEmpleado;
+		SELECT
+			@IdE=E.Id
+		FROM
+			dbo.Empleado E
+		WHERE
+			E.ValorDocumentoIdentificacion=@InMarcaValorDocumentoIdentificacion;
+
+		EXECUTE ActualizarSalarioEmpleado @Monto,
+										  @IdE,
+										  @IdMes,
+										  @OutResultCode OUTPUT;
+		Print('Salario')
+		--SELECT @OutResultCode;
+		--SELECT @FechaActual, @IdSemanaActual, @InFechaEntrada, @InFechaSalida,
+		--@InMarcaValorDocumentoIdentificacion, @IdMarcaAsistencia
+		--SELECT AAA=@Auxiliar;
+		SET @Cont=@Cont+1;
+	END
+	DROP TABLE #TempAsistencia
+	
+	--------------Se inserta la finalización de la corrida
+	INSERT INTO Corrida (FechaOperacion,
+						 TipoRegistro,
+						 PostTime)
+	VALUES(@FechaActual,
+		   2,
+		   GETDATE())
 
 	--Se incrementa el día para continuar leyendo el XML
 	SET @FechaActual=DATEADD(DAY,1,@FechaActual)

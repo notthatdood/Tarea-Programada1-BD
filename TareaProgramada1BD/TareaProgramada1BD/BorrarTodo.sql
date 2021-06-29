@@ -29,6 +29,10 @@ BEGIN
 	Drop table PorcentualSiObligatoria;
 	Drop table FijaNoObligatoria;
 	Drop table Jornada;
+	DROP TABLE Corrida;
+	DROP TABLE DetalleCorrida;
+	DROP TABLE TipoOperacion;
+	DROP TABLE Bitacora;
 	DROP PROCEDURE AsociarEmpleadoConFijaNoObligatoria;
 	DROP PROCEDURE AsociarEmpleadoConMes;
 	DROP PROCEDURE AsociarEmpleadoConPorcentualNoObligatoria;
@@ -52,5 +56,6 @@ BEGIN
 	DROP PROCEDURE ListarUsuarios;
 	DROP PROCEDURE MarcarAsistencia;
 	DROP PROCEDURE ActualizarSalarioEmpleado;
+	DROP PROCEDURE InsertarTipoOperacion;
 	SET @i=@i+1;
 END

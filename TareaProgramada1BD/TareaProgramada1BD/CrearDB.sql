@@ -160,8 +160,19 @@ CREATE TABLE Corrida ( Id INT IDENTITY(1,1) PRIMARY KEY
 					)
 GO
 
+CREATE TABLE TipoOperacion (Id INT IDENTITY (1,1) PRIMARY KEY
+							,Nombre VARCHAR(30)) 
+GO
+
 CREATE TABLE DetalleCorrida (Id INT IDENTITY (1,1) PRIMARY KEY
 							,IdCorrida INT
 							,TipoOperacionXML INT
 							,RefID INT
-							,FOREIGN KEY (IdCorrida) REFERENCES Corrida (Id)) 
+							,FOREIGN KEY (IdCorrida) REFERENCES Corrida (Id)
+							,FOREIGN KEY (TipoOperacionXML) REFERENCES TipoOperacion (Id)) 
+GO
+
+CREATE TABLE Bitacora (Id INT IDENTITY (1,1) PRIMARY KEY,
+						IdDetalleCorrida INT,
+						Texto VARCHAR(100)
+						,FOREIGN KEY (IdDetalleCorrida) REFERENCES DetalleCorrida (Id))
