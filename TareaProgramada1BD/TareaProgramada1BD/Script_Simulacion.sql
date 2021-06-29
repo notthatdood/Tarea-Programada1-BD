@@ -544,11 +544,11 @@ BEGIN
 
 	-----------------Segmento encargado de asociar empleados a deducciones----------------------------------
 	CREATE TABLE #TempAsocia(Id INT IDENTITY(1,1) PRIMARY KEY,
-				    IdDeduccion INT,
-					Monto INT,
-					ValorDocumentoIdentidad INT,
-					Secuencia INT,
-					ProduceError INT)
+				             IdDeduccion INT,
+							 Monto INT,
+							 ValorDocumentoIdentidad INT,
+							 Secuencia INT,
+							 ProduceError INT)
 	INSERT INTO #TempAsocia(IdDeduccion,
 							Monto,
 							ValorDocumentoIdentidad,
@@ -573,35 +573,109 @@ BEGIN
 	--SELECT @FechaActual;
 	--SELECT * FROM #TempAsocia;
 	SELECT
-		@Cont=1,
-		@LargoTabla=COUNT(*)
+		@SecItera=1,
+		@SecFinal=COUNT(*),
+		@Terminar=0
 	FROM
 		#TempAsocia
-	WHILE(@Cont<=@LargoTabla)
+
+	WHILE(@Terminar=0)
 	BEGIN
-		SELECT 
-			@InAsociaIdDeduccion=T.IdDeduccion,
-			@InAsociaMonto=T.Monto,
-			@InAsociaValorDocumentoIdentificacion=T.ValorDocumentoIdentidad
+		SELECT
+			@SecItera=(DC.RefID)+1
 		FROM
-			#TempAsocia T
+			DetalleCorrida DC,
+			Corrida C
 		WHERE
-			T.Id=@Cont;
-		IF(@InAsociaMonto=0)
-		BEGIN
-			EXECUTE AsociarEmpleadoConPorcentualNoObligatoria @InAsociaIdDeduccion,
-			@InAsociaValorDocumentoIdentificacion, @OutResultCode OUTPUT
-			--SELECT @OutResultCode;
-			SET @InAsociaMonto=@InAsociaMonto;
-		END
-		ELSE IF(@InAsociaMonto>0)
-		BEGIN
-			EXECUTE AsociarEmpleadoConFijaNoObligatoria @InAsociaIdDeduccion, @InAsociaMonto,
-			@InAsociaValorDocumentoIdentificacion, @OutResultCode OUTPUT
-			--SELECT @OutResultCode;
-		END
-		Print('Asociar con deduccion')
-		SET @Cont=@Cont+1;
+			@IdUltimaCorrida=DC.IdCorrida AND
+			DC.Id=@IdUltimoDetalleCorrida AND
+			DC.TipoOperacionXML=3;
+
+		INSERT INTO Bitacora (IdTipoOperacion,
+							  Texto,
+							  Fecha,
+							  IdTipoBitacora)
+		VALUES(3,
+			   'Nueva iteracion procesando asociar deducciones inciando en '+convert(varchar, @SecItera),
+			   @FechaActual,
+			   1)
+		BEGIN TRY
+			WHILE(@SecItera<=@SecFinal)
+			BEGIN
+				SELECT 
+					@InAsociaIdDeduccion=T.IdDeduccion,
+					@InAsociaMonto=T.Monto,
+					@InAsociaValorDocumentoIdentificacion=T.ValorDocumentoIdentidad,
+					@ProduceError=T.ProduceError
+				FROM
+					#TempAsocia T
+				WHERE
+					T.Id=@SecItera;
+				IF(@InAsociaMonto=0)
+				BEGIN
+					EXECUTE AsociarEmpleadoConPorcentualNoObligatoria @InAsociaIdDeduccion,
+					@InAsociaValorDocumentoIdentificacion, @OutResultCode OUTPUT
+					--SELECT @OutResultCode;
+					SET @InAsociaMonto=@InAsociaMonto;
+				END
+				ELSE IF(@InAsociaMonto>0)
+				BEGIN
+					EXECUTE AsociarEmpleadoConFijaNoObligatoria @InAsociaIdDeduccion, @InAsociaMonto,
+					@InAsociaValorDocumentoIdentificacion, @OutResultCode OUTPUT
+					--SELECT @OutResultCode;
+				END
+				IF(@ProduceError=1)
+					BEGIN
+						SELECT @ProduceError/0;
+					END
+				---------Se inserta en detalle corrida--------------
+				INSERT INTO DetalleCorrida (IdCorrida,
+											TipoOperacionXML,
+											RefID)
+				VALUES(@IdUltimaCorrida,
+					   2,
+					   @SecItera)
+				SET @IdUltimODetalleCorrida=SCOPE_IDENTITY();
+				SET @SecItera=@SecItera+1;
+			END
+			SET @Terminar=1;
+			INSERT INTO Bitacora (IdTipoOperacion,
+								  Texto,
+								  Fecha,
+								  IdTipoBitacora)
+			VALUES(3,
+				   'Se finalizó procesando asociar deducciones en '+convert(varchar, @FechaActual),
+				   @FechaActual,
+				   3)
+		END TRY
+		BEGIN CATCH
+		-------Reiniciando corrida-----------
+			INSERT INTO Corrida (FechaOperacion,
+						 TipoRegistro,
+						 PostTime)
+			VALUES(@FechaActual,
+				   1,
+				   GETDATE())
+			SET @IdUltimaCorrida=SCOPE_IDENTITY();
+
+			INSERT INTO DetalleCorrida (IdCorrida,
+										TipoOperacionXML,
+										RefID)
+			VALUES(@IdUltimaCorrida,
+				   3,
+				   @SecItera)
+			SET @IdUltimODetalleCorrida=SCOPE_IDENTITY();
+
+			INSERT INTO Bitacora (IdTipoOperacion,
+								  Texto,
+								  Fecha,
+								  IdTipoBitacora)
+			VALUES(3,
+				   'Hubo error en el registro numero '+convert(varchar, @SecItera)+
+				   ' procesando asociar deducciones en '+convert(varchar, @FechaActual),
+				   @FechaActual,
+				   2)
+		END CATCH
 	END
 	DROP TABLE #TempAsocia
 
